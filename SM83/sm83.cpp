@@ -6,6 +6,8 @@
 
 SM83::SM83() {
     reset();
+
+    // TODO Initialise both instructions and prefix_instructions
 }
 
 SM83::~SM83() {
@@ -16,9 +18,8 @@ void SM83::run() {
     while (cycles > 0) {
         // Fetch
 
-        // Decode
+        // Decode & Execute
 
-        // Execute
 
         // Update PC
 
@@ -52,4 +53,8 @@ void SM83::writeWord(uint16_t address, uint16_t data) {
 
 uint16_t SM83::readWord(uint16_t address) {
 
+}
+
+void SM83::decode_execute(uint8_t opcode) {
+    // 
 }

@@ -3,3 +3,6 @@ README.pdf
 build
 Makefile
 autorun.sh
+
+tools/instructions.hpp
+tools/instructions.cpp
