@@ -6,3 +6,8 @@ autorun.sh
 
 tools/instructions.hpp
 tools/instructions.cpp
+.DS_Store
+.vscode/c_cpp_properties.json
+.vscode/settings.json
+tools/Opcodes.json
+tools/template.cpp

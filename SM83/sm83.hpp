@@ -1,6 +1,6 @@
 #pragma once
 
-#include <array>
+#include <vector>
 #include <cstdint>
 #include <string>
 #include "device.hpp"
@@ -14,54 +14,74 @@
         uint16_t x##y; \
     }
 
+#define FLAG_REGISTER(x)\
+    union { \
+        struct { \
+            bool   : 4; \
+            bool Z : 1; \
+            bool N : 1; \
+            bool H : 1; \
+            bool C : 1; \
+        } flags; \
+        uint8_t x; \
+    }
+
 typedef struct Registers {
     uint8_t IR;
     uint8_t IE;
-    REGISTER_PAIR(A, F);
+    uint8_t A;
+    FLAG_REGISTER(F);
     REGISTER_PAIR(B, C);
     REGISTER_PAIR(D, E);
     REGISTER_PAIR(H, L);
     uint16_t PC;
     uint16_t SP;
-
 } Registers;
 
 class SM83 : public Device {
+public:
+    typedef struct instr_ret_info { uint8_t cycles; uint8_t pc_incr; } instr_ret_info;
+    typedef instr_ret_info(SM83::* instruction_ptr)(void);
+
     struct Instruction {
         std::string name;
-        uint8_t(SM83::* operate)(void) = nullptr;
-        uint8_t cycles = 0;
+        instruction_ptr operation = nullptr;
     };
 
-public:
     SM83();
     ~SM83();
     void run();
     void reset();
+    void fill_instruction_array();
     void write(uint16_t address, uint8_t data) override;
     uint8_t read(uint16_t address) override;
     void writeWord(uint16_t address, uint16_t data) override;
     uint16_t readWord(uint16_t address) override;
 private:
     Registers registers;
+    uint8_t current_opcode;
+
     uint32_t cycles;
-    void fetch();
+    uint8_t fetch(uint16_t);
     void decode_execute(uint8_t opcode);
-    std::array<Instruction, 256> instructions;
-    std::array<Instruction, 256> prefix_instructions;
+    std::vector<Instruction> instructions;
+    std::vector<Instruction> prefix_instructions;
+
+    // Utility functions
+    uint8_t register_from_index(uint8_t index);
 
     // Unprefixed instructions
-    void ADC(); void ADD(); void AND(); void CALL();
-    void CCF(); void CP(); void CPL(); void DAA();
-    void DEC(); void DI(); void EI(); void HALT();
-    void INC(); void JP(); void JR(); void LD();
-    void LDH(); void NOP(); void OR(); void POP();
-    void PREF(); void PUSH(); void RET(); void RETI();
-    void RLA(); void RLCA(); void RRA(); void RRCA();
-    void RST(); void SBC(); void SCF(); void STOP();
-    void SUB(); void XOR(); void XXX();
+    instr_ret_info ADC(); instr_ret_info ADD(); instr_ret_info AND(); instr_ret_info CALL();
+    instr_ret_info CCF(); instr_ret_info CP(); instr_ret_info CPL(); instr_ret_info DAA();
+    instr_ret_info DEC(); instr_ret_info DI(); instr_ret_info EI(); instr_ret_info HALT();
+    instr_ret_info INC(); instr_ret_info JP(); instr_ret_info JR(); instr_ret_info LD();
+    instr_ret_info LDH(); instr_ret_info NOP(); instr_ret_info OR(); instr_ret_info POP();
+    instr_ret_info PREF(); instr_ret_info PUSH(); instr_ret_info RET(); instr_ret_info RETI();
+    instr_ret_info RLA(); instr_ret_info RLCA(); instr_ret_info RRA(); instr_ret_info RRCA();
+    instr_ret_info RST(); instr_ret_info SBC(); instr_ret_info SCF(); instr_ret_info STOP();
+    instr_ret_info SUB(); instr_ret_info XOR(); instr_ret_info XXX();
     // Prefixed instructions
-    void BIT(); void RES(); void RL(); void RLC();
-    void RR(); void RRC(); void SET(); void SLA();
-    void SRA(); void SRL(); void SWAP();
+    instr_ret_info BIT(); instr_ret_info RES(); instr_ret_info RL(); instr_ret_info RLC();
+    instr_ret_info RR(); instr_ret_info RRC(); instr_ret_info SET(); instr_ret_info SLA();
+    instr_ret_info SRA(); instr_ret_info SRL(); instr_ret_info SWAP();
 };
