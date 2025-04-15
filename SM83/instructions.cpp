@@ -8,7 +8,7 @@
 // Unprefixed instructions
 SM83::instr_ret_info SM83::ADC() {
     // ADC (HL): Add with carry (indirect HL)
-    if (current_opcode == 0b10001110) {
+    if (registers.IR == 0b10001110) {
         uint8_t prev_a_value = registers.A;
         uint8_t add_value = fetch(registers.HL);
         registers.A += add_value + (registers.flags.C ? 1 : 0);
@@ -22,8 +22,8 @@ SM83::instr_ret_info SM83::ADC() {
     }
 
     // ADC r: Add with carry (register)
-    else if ((current_opcode >> 3) == 0b10001) {
-        uint8_t reg_value = register_8_index_read(current_opcode & 0b111);
+    else if ((registers.IR >> 3) == 0b10001) {
+        uint8_t reg_value = register_8_index_read(registers.IR & 0b111);
         uint8_t prev_a_value = registers.A;
 
         registers.A += reg_value + (registers.flags.C ? 1 : 0);
@@ -37,7 +37,7 @@ SM83::instr_ret_info SM83::ADC() {
     }
 
     // ADC n: Add with carry (immediate)
-    else if (current_opcode == 0b11001110) {
+    else if (registers.IR == 0b11001110) {
         uint8_t add_value = fetch(registers.PC + 1);
         uint8_t prev_a_value = registers.A + (registers.flags.C ? 1 : 0);
 
@@ -54,7 +54,7 @@ SM83::instr_ret_info SM83::ADC() {
 
 SM83::instr_ret_info SM83::ADD() {
     // ADD (HL): Add (indirect HL)
-    if (current_opcode == 0b10000110) {
+    if (registers.IR == 0b10000110) {
         uint8_t prev_a_value = registers.A;
         uint8_t add_value = fetch(registers.HL);
         registers.A += add_value;
@@ -68,8 +68,8 @@ SM83::instr_ret_info SM83::ADD() {
     }
 
     // ADD r: Add (register)
-    else if ((current_opcode >> 3) == 0b10000) {
-        uint8_t reg_value = register_8_index_read(current_opcode & 0b111);
+    else if ((registers.IR >> 3) == 0b10000) {
+        uint8_t reg_value = register_8_index_read(registers.IR & 0b111);
         uint8_t prev_a_value = registers.A;
 
         registers.A += reg_value;
@@ -82,7 +82,7 @@ SM83::instr_ret_info SM83::ADD() {
         return { T_CYC(1), 1, false };
     }
     // ADD n: Add (immediate)
-    else if (current_opcode == 0b11000110) {
+    else if (registers.IR == 0b11000110) {
         uint8_t add_value = fetch(registers.PC + 1);
         uint8_t prev_a_value = registers.A;
 
@@ -96,7 +96,7 @@ SM83::instr_ret_info SM83::ADD() {
         return { T_CYC(2), 2, false };
     }
     // ADD SP, e: Add to stack pointer (relative)
-    else if (current_opcode == 0b11101000) {
+    else if (registers.IR == 0b11101000) {
         uint16_t prev_sp_value = registers.SP;
         int8_t add_value = fetch(registers.PC + 1);
         registers.SP += add_value;
@@ -113,7 +113,7 @@ SM83::instr_ret_info SM83::ADD() {
 
 SM83::instr_ret_info SM83::AND() {
     // AND (HL): Bitwise AND (indirect HL)
-    if (current_opcode == 0b10100110) {
+    if (registers.IR == 0b10100110) {
         uint8_t and_value = fetch(registers.HL);
         registers.A &= and_value;
 
@@ -126,8 +126,8 @@ SM83::instr_ret_info SM83::AND() {
 
     }
     // AND r: Bitwise AND (register)
-    else if ((current_opcode >> 3) == 0b10100) {
-        uint8_t reg_value = register_8_index_read(current_opcode & 0b111);
+    else if ((registers.IR >> 3) == 0b10100) {
+        uint8_t reg_value = register_8_index_read(registers.IR & 0b111);
         registers.A &= reg_value;
 
         registers.flags.Z = registers.A == 0;
@@ -139,7 +139,7 @@ SM83::instr_ret_info SM83::AND() {
     }
 
     // AND n: Bitwise AND (immediate)
-    else if (current_opcode == 0b11100110) {
+    else if (registers.IR == 0b11100110) {
         uint8_t and_value = fetch(registers.PC + 1);
         registers.A &= and_value;
 
@@ -154,7 +154,7 @@ SM83::instr_ret_info SM83::AND() {
 
 SM83::instr_ret_info SM83::CALL() {
     // CALL nn: Call function
-    if (current_opcode == 0b11001101) {
+    if (registers.IR == 0b11001101) {
         uint8_t lsb = fetch(registers.PC + 1);
         uint8_t msb = fetch(registers.PC + 2);
         uint16_t nn = (msb << 8) | lsb;
@@ -165,9 +165,9 @@ SM83::instr_ret_info SM83::CALL() {
     }
 
     // CALL cc, nn: Call function (conditional)
-    if ((current_opcode & 0b11100111) == 0b11000100) {
-        bool c_m = current_opcode & 0b00010000;
-        bool c_l = current_opcode & 0b00001000;
+    if ((registers.IR & 0b11100111) == 0b11000100) {
+        bool c_m = registers.IR & 0b00010000;
+        bool c_l = registers.IR & 0b00001000;
         uint8_t lsb = fetch(registers.PC + 1);
         uint8_t msb = fetch(registers.PC + 2);
         uint16_t nn = (msb << 8) | lsb;
@@ -193,7 +193,7 @@ SM83::instr_ret_info SM83::CCF() {
 
 SM83::instr_ret_info SM83::CP() {
     // CP (HL): Compare (indirect HL)
-    if (current_opcode == 0b10011110) {
+    if (registers.IR == 0b10011110) {
         uint8_t prev_a_value = registers.A;
         uint8_t sub_value = fetch(registers.HL);
 
@@ -208,7 +208,7 @@ SM83::instr_ret_info SM83::CP() {
     }
 
     // CP n: Compare (immediate)
-    else if (current_opcode == 0b11111110) {
+    else if (registers.IR == 0b11111110) {
         uint8_t prev_a_value = registers.A;
         uint8_t sub_value = fetch(registers.PC + 1);
 
@@ -223,9 +223,9 @@ SM83::instr_ret_info SM83::CP() {
     }
 
     // CP r: Compare (register)
-    else if ((current_opcode >> 3) == 0b10111) {
+    else if ((registers.IR >> 3) == 0b10111) {
         uint8_t prev_a_value = registers.A;
-        uint8_t sub_value = register_8_index_read(current_opcode & 0b111);
+        uint8_t sub_value = register_8_index_read(registers.IR & 0b111);
 
         uint8_t result = registers.A - sub_value;
 
@@ -255,9 +255,9 @@ SM83::instr_ret_info SM83::DAA() {
 
 SM83::instr_ret_info SM83::DEC() {
     // DEC r: Decrement (register)
-    if ((current_opcode & 0b11000111) == 0b00000101) {
+    if ((registers.IR & 0b11000111) == 0b00000101) {
         // TODO: Verify that the register indexing is consistent between opcodes
-        uint8_t register_index = (current_opcode >> 3) & 0b0111;
+        uint8_t register_index = (registers.IR >> 3) & 0b0111;
         uint8_t prev_reg_value = register_8_index_read(register_index);
         uint8_t result = register_8_index_read(register_index) - 1;
         register_8_index_write(register_index, result);
@@ -269,7 +269,7 @@ SM83::instr_ret_info SM83::DEC() {
     }
 
     // DEC (HL): Decrement (indirect HL)
-    else if (current_opcode == 0b00110101) {
+    else if (registers.IR == 0b00110101) {
         uint8_t data = fetch(registers.HL);
         uint8_t result = data - 1;
         //TODO: Use proper bus write call
@@ -282,9 +282,9 @@ SM83::instr_ret_info SM83::DEC() {
     }
 
     // DEC rr: Decrement 16-bit register
-    else if ((current_opcode & 0b11001111) == 0b00001011) {
+    else if ((registers.IR & 0b11001111) == 0b00001011) {
         // TODO: Does this not set flags? Verify
-        uint8_t register_index = (current_opcode >> 4) & 0b011;
+        uint8_t register_index = (registers.IR >> 4) & 0b011;
         register_16_index_write(register_index, register_16_index_read(register_index) - 1);
         return { T_CYC(2), 1, false };
     }
@@ -293,7 +293,7 @@ SM83::instr_ret_info SM83::DEC() {
 }
 
 SM83::instr_ret_info SM83::DI() {
-    ASSERT(current_opcode == 0b11110011);
+    ASSERT(registers.IR == 0b11110011);
     // DI: Disable interrupts (0b11110011)
     registers.IME = false;
     registers.IME_DEFER = false;
@@ -301,7 +301,7 @@ SM83::instr_ret_info SM83::DI() {
 }
 
 SM83::instr_ret_info SM83::EI() {
-    ASSERT(current_opcode == 0b11111011);
+    ASSERT(registers.IR == 0b11111011);
     // EI: Enable interrupts (0b11111011)
     registers.IME_DEFER = true;
     return { T_CYC(1), 1, false };
@@ -313,9 +313,9 @@ SM83::instr_ret_info SM83::HALT() {
 
 SM83::instr_ret_info SM83::INC() {
     // INC r: Increment (register)
-    if ((current_opcode & 0b11000111) == 0b00000100) {
+    if ((registers.IR & 0b11000111) == 0b00000100) {
         // TODO: Verify that the register indexing is consistent between opcodes
-        uint8_t register_index = (current_opcode >> 3) & 0b0111;
+        uint8_t register_index = (registers.IR >> 3) & 0b0111;
         uint8_t prev_reg_value = register_8_index_read(register_index);
         uint8_t result = register_8_index_read(register_index) + 1;
         register_8_index_write(register_index, result);
@@ -327,7 +327,7 @@ SM83::instr_ret_info SM83::INC() {
     }
 
     // INC (HL): Increment (indirect HL)
-    else if (current_opcode == 0b00110100) {
+    else if (registers.IR == 0b00110100) {
         uint8_t data = fetch(registers.HL);
         uint8_t result = data + 1;
         //TODO: Use proper bus write call
@@ -340,9 +340,9 @@ SM83::instr_ret_info SM83::INC() {
     }
 
     // INC rr: Increment 16-bit register
-    else if ((current_opcode & 0b11001111) == 0b00000011) {
+    else if ((registers.IR & 0b11001111) == 0b00000011) {
         // TODO: Does this not set flags? Verify
-        uint8_t register_index = (current_opcode >> 4) & 0b011;
+        uint8_t register_index = (registers.IR >> 4) & 0b011;
         register_16_index_write(register_index, register_16_index_read(register_index) + 1);
         return { T_CYC(2), 1, false };
     }
@@ -352,7 +352,7 @@ SM83::instr_ret_info SM83::INC() {
 
 SM83::instr_ret_info SM83::JP() {
     // JP nn: Jump
-    if (current_opcode == 0b11000011) {
+    if (registers.IR == 0b11000011) {
         uint8_t lsb = fetch(registers.PC + 1);
         uint8_t msb = fetch(registers.PC + 2);
         uint16_t nn = (msb << 8) | lsb;
@@ -382,11 +382,11 @@ SM83::instr_ret_info SM83::PUSH() {
 
 SM83::instr_ret_info SM83::RET() {
     // RET cc: Return from function (conditional)
-    if (current_opcode >> 5 == 0b110) {
+    if (registers.IR >> 5 == 0b110) {
 
     }
     // RET: Return from function
-    else if (current_opcode == 0b11001001) {
+    else if (registers.IR == 0b11001001) {
         uint8_t lsb = pop_stack();
         uint8_t msb = pop_stack();
         uint16_t nn = (msb << 8) | lsb;
@@ -429,7 +429,7 @@ SM83::instr_ret_info SM83::RRCA() {
 
 SM83::instr_ret_info SM83::RST() {
     // RST n: Restart / Call function (implied) (opcode 0b11xxx111)
-    uint8_t lsb = current_opcode & 0b00111000;
+    uint8_t lsb = registers.IR & 0b00111000;
     uint8_t msb = 0x00;
     uint16_t nn = (msb << 8) | lsb;
 
@@ -443,7 +443,7 @@ SM83::instr_ret_info SM83::RST() {
 
 SM83::instr_ret_info SM83::SBC() {
     //SBC n : Subtract with carry(immediate)
-    if (current_opcode == 0b11011110) {
+    if (registers.IR == 0b11011110) {
         uint8_t prev_a_value = registers.A;
         uint8_t sub_value = fetch(registers.PC + 1);
 
@@ -457,7 +457,7 @@ SM83::instr_ret_info SM83::SBC() {
         return{ T_CYC(2), 2, false };
     }
     //SBC(HL) : Subtract with carry(indirect HL)
-    else if (current_opcode == 0b10011110) {
+    else if (registers.IR == 0b10011110) {
         uint8_t prev_a_value = registers.A;
         uint8_t sub_value = fetch(registers.HL);
 
@@ -471,9 +471,9 @@ SM83::instr_ret_info SM83::SBC() {
         return { T_CYC(2), 1, false };
     }
     // SBC r: Subtract with carry (register)
-    else if ((current_opcode >> 3) == 0b10011) {
+    else if ((registers.IR >> 3) == 0b10011) {
         uint8_t prev_a_value = registers.A;
-        uint8_t sub_value = register_8_index_read(current_opcode & 0b111);
+        uint8_t sub_value = register_8_index_read(registers.IR & 0b111);
 
         registers.A -= sub_value - registers.flags.C;
 
@@ -502,7 +502,7 @@ SM83::instr_ret_info SM83::STOP() {
 
 SM83::instr_ret_info SM83::SUB() {
     //SUB(HL) : Subtract(indirect HL)
-    if (current_opcode == 0b10010110) {
+    if (registers.IR == 0b10010110) {
         uint8_t prev_a_value = registers.A;
         uint8_t sub_value = fetch(registers.HL);
 
@@ -516,7 +516,7 @@ SM83::instr_ret_info SM83::SUB() {
         return { T_CYC(2), 1, false };
     }
     // SUB n: Subtract (immediate)
-    else if (current_opcode == 0b11010110) {
+    else if (registers.IR == 0b11010110) {
         uint8_t prev_a_value = registers.A;
         uint8_t sub_value = fetch(registers.PC + 1);
 
@@ -531,9 +531,9 @@ SM83::instr_ret_info SM83::SUB() {
 
     }
     // SUB r: Subtract (register)
-    else if ((current_opcode >> 3) == 0b10010) {
+    else if ((registers.IR >> 3) == 0b10010) {
         uint8_t prev_a_value = registers.A;
-        uint8_t sub_value = register_8_index_read(current_opcode & 0b111);
+        uint8_t sub_value = register_8_index_read(registers.IR & 0b111);
 
         registers.A -= sub_value;
 
@@ -550,7 +550,7 @@ SM83::instr_ret_info SM83::SUB() {
 
 SM83::instr_ret_info SM83::XOR() {
     // XOR(HL) : Bitwise XOR(indirect HL)
-    if (current_opcode == 0b10101110) {
+    if (registers.IR == 0b10101110) {
         uint8_t prev_a_value = registers.A;
         uint8_t xor_value = fetch(registers.HL);
 
@@ -564,7 +564,7 @@ SM83::instr_ret_info SM83::XOR() {
         return { T_CYC(2), 1, false };
     }
     // XOR n: Bitwise XOR (immediate)
-    else if (current_opcode == 0b11101110) {
+    else if (registers.IR == 0b11101110) {
         uint8_t prev_a_value = registers.A;
         uint8_t xor_value = fetch(registers.PC + 1);
 
@@ -578,9 +578,9 @@ SM83::instr_ret_info SM83::XOR() {
         return { T_CYC(2), 2, false };
     }
     // XOR r: Bitwise XOR (register)
-    else if ((current_opcode >> 3) == 0b10101) {
+    else if ((registers.IR >> 3) == 0b10101) {
         uint8_t prev_a_value = registers.A;
-        uint8_t xor_value = register_8_index_read(current_opcode & 0b111);
+        uint8_t xor_value = register_8_index_read(registers.IR & 0b111);
 
         registers.A ^= xor_value;
 
