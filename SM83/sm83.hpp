@@ -26,21 +26,37 @@
         uint8_t x; \
     }
 
+#define INTERRUPT_REGISTER(x)\
+    union { \
+        struct { \
+            bool        : 3; \
+            bool x##_JOYPAD : 1; \
+            bool x##_SERIAL : 1; \
+            bool x##_TIMER  : 1; \
+            bool x##_LCDC   : 1; \
+            bool x##_VBLANK : 1; \
+        }; \
+        uint8_t x; \
+    }
+
 typedef struct Registers {
-    uint8_t IR;
-    uint8_t IE;
-    uint8_t A;
-    FLAG_REGISTER(F);
+    uint8_t IR;                 // Instruction Register
+    INTERRUPT_REGISTER(IE);     // Interrupt Enable
+    uint8_t A;                  // Accumulator
+    FLAG_REGISTER(F);           // Flags
     REGISTER_PAIR(B, C);
     REGISTER_PAIR(D, E);
     REGISTER_PAIR(H, L);
-    uint16_t PC;
-    uint16_t SP;
+    uint16_t PC;                // Program Counter
+    uint16_t SP;                // Stack Pointer
+    INTERRUPT_REGISTER(IF);     // Interrupt Flag
+    bool IME : 1;               // Interrupt Master Enable
+    bool IME_DEFER : 1;         // Interrupt Master Enable deferred
 } Registers;
 
 class SM83 : public Device {
 public:
-    typedef struct instr_ret_info { uint8_t cycles; uint8_t pc_incr; } instr_ret_info;
+    typedef struct instr_ret_info { uint8_t cycles; uint8_t pc_incr; bool has_set_PC; } instr_ret_info;
     typedef instr_ret_info(SM83::* instruction_ptr)(void);
 
     struct Instruction {
@@ -67,8 +83,14 @@ private:
     std::vector<Instruction> instructions;
     std::vector<Instruction> prefix_instructions;
 
+    void push_stack(uint8_t data);
+    uint8_t pop_stack();
+
     // Utility functions
-    uint8_t register_from_index(uint8_t index);
+    uint8_t register_8_index_read(uint8_t index);
+    void register_8_index_write(uint8_t index, uint8_t data);
+    uint16_t register_16_index_read(uint8_t index);
+    void register_16_index_write(uint8_t index, uint16_t data);
 
     // Unprefixed instructions
     instr_ret_info ADC(); instr_ret_info ADD(); instr_ret_info AND(); instr_ret_info CALL();
