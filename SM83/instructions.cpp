@@ -15,23 +15,23 @@ SM83::instr_ret_info SM83::ADC() {
 
         registers.flags.Z = registers.A == 0;
         registers.flags.N = 0;
-        registers.flags.H = ((registers.A & 0b00001111) < (prev_a_value & 0b00001111));
-        registers.flags.C = (registers.A < prev_a_value);
+        registers.flags.H = CARRY_4(registers.A, prev_a_value);
+        registers.flags.C = CARRY_8(registers.A, prev_a_value);
 
         return { T_CYC(2) , 1, false };
     }
 
     // ADC r: Add with carry (register)
     else if ((registers.IR >> 3) == 0b10001) {
-        uint8_t reg_value = register_8_index_read(registers.IR & 0b111);
+        uint8_t reg_value = register_8_index_read(registers.IR & 0b0111);
         uint8_t prev_a_value = registers.A;
 
         registers.A += reg_value + (registers.flags.C ? 1 : 0);
 
         registers.flags.Z = registers.A == 0;
         registers.flags.N = 0;
-        registers.flags.H = ((registers.A & 0x0F) < (prev_a_value & 0x0F));
-        registers.flags.C = (registers.A < prev_a_value);
+        registers.flags.H = CARRY_4(registers.A, prev_a_value);
+        registers.flags.C = CARRY_8(registers.A, prev_a_value);
 
         return { T_CYC(1), 1, false };
     }
@@ -45,8 +45,8 @@ SM83::instr_ret_info SM83::ADC() {
 
         registers.flags.Z = registers.A == 0;
         registers.flags.N = 0;
-        registers.flags.H = ((registers.A & 0x0F) < (prev_a_value & 0x0F));
-        registers.flags.C = (registers.A < prev_a_value);
+        registers.flags.H = CARRY_4(registers.A, prev_a_value);
+        registers.flags.C = CARRY_8(registers.A, prev_a_value);
 
         return { T_CYC(2), 2, false };
     }
@@ -61,8 +61,8 @@ SM83::instr_ret_info SM83::ADD() {
 
         registers.flags.Z = registers.A == 0;
         registers.flags.N = 0;
-        registers.flags.H = ((registers.A & 0b00001111) < (prev_a_value & 0b00001111));
-        registers.flags.C = (registers.A < prev_a_value);
+        registers.flags.H = CARRY_4(registers.A, prev_a_value);
+        registers.flags.C = CARRY_8(registers.A, prev_a_value);
 
         return { T_CYC(2) , 1, false };
     }
@@ -76,8 +76,8 @@ SM83::instr_ret_info SM83::ADD() {
 
         registers.flags.Z = registers.A == 0;
         registers.flags.N = 0;
-        registers.flags.H = ((registers.A & 0x0F) < (prev_a_value & 0x0F));
-        registers.flags.C = (registers.A < prev_a_value);
+        registers.flags.H = CARRY_4(registers.A, prev_a_value);
+        registers.flags.C = CARRY_8(registers.A, prev_a_value);
 
         return { T_CYC(1), 1, false };
     }
@@ -90,8 +90,8 @@ SM83::instr_ret_info SM83::ADD() {
 
         registers.flags.Z = registers.A == 0;
         registers.flags.N = 0;
-        registers.flags.H = ((registers.A & 0x0F) < (prev_a_value & 0x0F));
-        registers.flags.C = (registers.A < prev_a_value);
+        registers.flags.H = CARRY_4(registers.A, prev_a_value);
+        registers.flags.C = CARRY_8(registers.A, prev_a_value);
 
         return { T_CYC(2), 2, false };
     }
@@ -103,8 +103,8 @@ SM83::instr_ret_info SM83::ADD() {
 
         registers.flags.Z = 0;
         registers.flags.N = 0;
-        registers.flags.H = ((registers.SP & 0x0F) < (prev_sp_value & 0x0F));
-        registers.flags.C = ((registers.SP & 0x00FF) < (prev_sp_value & 0x00FF));
+        registers.flags.H = CARRY_4(registers.SP, prev_sp_value);
+        registers.flags.C = CARRY_8(registers.SP, prev_sp_value);
         return { T_CYC(4), 2, false };
     }
 
@@ -381,6 +381,7 @@ SM83::instr_ret_info SM83::PUSH() {
 }
 
 SM83::instr_ret_info SM83::RET() {
+    // TODO UNFINISHED
     // RET cc: Return from function (conditional)
     if (registers.IR >> 5 == 0b110) {
 
@@ -452,7 +453,7 @@ SM83::instr_ret_info SM83::SBC() {
         registers.flags.Z = registers.A == 0;
         registers.flags.N = 1;
         registers.flags.H = CARRY_4(registers.A, prev_a_value);
-        registers.flags.C = (registers.A > prev_a_value);
+        registers.flags.C = CARRY_8(registers.A, prev_a_value);
 
         return{ T_CYC(2), 2, false };
     }
@@ -466,7 +467,7 @@ SM83::instr_ret_info SM83::SBC() {
         registers.flags.Z = registers.A == 0;
         registers.flags.N = 1;
         registers.flags.H = CARRY_4(registers.A, prev_a_value);
-        registers.flags.C = (registers.A > prev_a_value);
+        registers.flags.C = CARRY_8(registers.A, prev_a_value);
 
         return { T_CYC(2), 1, false };
     }
@@ -480,7 +481,7 @@ SM83::instr_ret_info SM83::SBC() {
         registers.flags.Z = registers.A == 0;
         registers.flags.N = 1;
         registers.flags.H = CARRY_4(registers.A, prev_a_value);
-        registers.flags.C = (registers.A > prev_a_value);
+        registers.flags.C = CARRY_8(registers.A, prev_a_value);
 
         return  { T_CYC(1), 1, false };
     }
