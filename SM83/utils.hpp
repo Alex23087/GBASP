@@ -7,8 +7,8 @@
 #define ASSERT(x)
 #endif
 
-#define MSB(x) (x & 0xF0)
-#define LSB(x) (x & 0x0F)
+#define MSB(x) ((x & 0xFF00) >> 4)
+#define LSB(x) (x & 0x00FF)
 
 #define CARRY_4(x, y) ((x & 0b00001111) > (y & 0b00001111))
 #define CARRY_8(x, y) (x > y)

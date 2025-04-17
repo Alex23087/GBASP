@@ -86,7 +86,7 @@ uint8_t SM83::register_8_index_read(uint8_t index) {
     }
 }
 
-uint8_t SM83::register_8_index_write(uint8_t index, uint8_t data) {
+void SM83::register_8_index_write(uint8_t index, uint8_t data) {
     switch (index) {
         case 0:
             registers.B = data;

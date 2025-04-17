@@ -75,7 +75,6 @@ public:
     uint16_t readWord(uint16_t address) override;
 private:
     Registers registers;
-    uint8_t current_opcode;
 
     uint32_t cycles;
     uint8_t fetch(uint16_t);
