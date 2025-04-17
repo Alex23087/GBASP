@@ -4,6 +4,8 @@
 #include "utils.hpp"
 
 #define T_CYC(x) (x * 4)
+#define CC(x, y) ((!registers.flags.Z ^ x) & ~y) || ((!registers.flags.C ^ x) & y)
+
 
 // Unprefixed instructions
 SM83::instr_ret_info SM83::ADC() {
@@ -50,6 +52,7 @@ SM83::instr_ret_info SM83::ADC() {
 
         return { T_CYC(2), 2, false };
     }
+    print_error("Invalid opcode passed to ADC");
 }
 
 SM83::instr_ret_info SM83::ADD() {
@@ -150,6 +153,7 @@ SM83::instr_ret_info SM83::AND() {
 
         return { T_CYC(2), 2, false };
     }
+    print_error("Invalid opcode passed to AND");
 }
 
 SM83::instr_ret_info SM83::CALL() {
@@ -171,7 +175,7 @@ SM83::instr_ret_info SM83::CALL() {
         uint8_t lsb = fetch(registers.PC + 1);
         uint8_t msb = fetch(registers.PC + 2);
         uint16_t nn = (msb << 8) | lsb;
-        bool condition = ((registers.flags.Z ^ c_l) ^ c_m) || ((registers.flags.C ^ c_l) & c_m);
+        bool condition = CC(c_l, c_m);
         if (condition) {
             push_stack(MSB(registers.PC));
             push_stack(LSB(registers.PC));
@@ -359,9 +363,21 @@ SM83::instr_ret_info SM83::JP() {
         registers.PC = nn;
         return { T_CYC(4), 3, true };
     }
+    // JP HL: Jump to HL
+    else if (registers.IR == 0b11101001) {
+        return { T_CYC(1), 1, false };
+    }
+    // JP cc, nn: Jump (conditional)
+    else if ((registers.IR >> 5) == 0b110) {
+        return { T_CYC(4), 3, true }; // cc = true
+        return { T_CYC(3), 3, false }; // cc = false
+    }
+    print_error("Invalid opcode passed to JP");
 }
 
-SM83::instr_ret_info SM83::JR() {}
+SM83::instr_ret_info SM83::JR() {
+
+}
 SM83::instr_ret_info SM83::LD() {}
 SM83::instr_ret_info SM83::LDH() {}
 
@@ -381,10 +397,20 @@ SM83::instr_ret_info SM83::PUSH() {
 }
 
 SM83::instr_ret_info SM83::RET() {
-    // TODO UNFINISHED
     // RET cc: Return from function (conditional)
     if (registers.IR >> 5 == 0b110) {
+        bool c_m = registers.IR & 0b00010000;
+        bool c_l = registers.IR & 0b00001000;
+        uint8_t lsb = pop_stack();
+        uint8_t msb = pop_stack();
+        uint16_t nn = (msb << 8) | lsb;
 
+        bool condition = CC(c_l, c_m);
+        if (condition) {
+            registers.PC = nn;
+            return { T_CYC(5), 1, true };
+        }
+        return { T_CYC(2), 1, false };
     }
     // RET: Return from function
     else if (registers.IR == 0b11001001) {
@@ -396,9 +422,7 @@ SM83::instr_ret_info SM83::RET() {
 
         return { T_CYC(4), 1, true };
     }
-
-
-
+    print_error("Invalid opcode passed to RET");
 }
 
 SM83::instr_ret_info SM83::RETI() {
