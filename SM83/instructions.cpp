@@ -756,18 +756,50 @@ SM83::instr_ret_info SM83::RETI() {
 }
 
 SM83::instr_ret_info SM83::RLA() {
-    print_error("IT'S TIME TO STOP! The programmer has a nap. Hold out! Programmer!");
+    // RLA: Rotate left accumulator (0b00010111)
+    uint8_t prev_a_value = registers.A;
+    uint8_t result = (registers.A << 1) | registers.flags.C;
+    registers.A = result;
+    registers.flags.Z = 0;
+    registers.flags.N = 0;
+    registers.flags.H = 0;
+    registers.flags.C = (prev_a_value & 0b10000000) != 0;
 }
 
 SM83::instr_ret_info SM83::RLCA() {
-    print_error("IT'S TIME TO STOP! The programmer has a nap. Hold out! Programmer!");
+    // RLCA: Rotate left accumulator (0b00000111)
+    uint8_t prev_a_value = registers.A;
+    uint8_t result = (registers.A << 1) | (registers.A >> 7);
+    registers.A = result;
+    registers.flags.Z = 0;
+    registers.flags.N = 0;
+    registers.flags.H = 0;
+    registers.flags.C = (prev_a_value & 0b10000000) != 0;
+    return { T_CYC(1), 1, false };
 }
+
 SM83::instr_ret_info SM83::RRA() {
-    print_error("IT'S TIME TO STOP! The programmer has a nap. Hold out! Programmer!");
+    // RRA: Rotate right accumulator (0b00011111)
+    uint8_t prev_a_value = registers.A;
+    uint8_t result = (registers.A >> 1) | (registers.flags.C << 7);
+    registers.A = result;
+    registers.flags.Z = 0;
+    registers.flags.N = 0;
+    registers.flags.H = 0;
+    registers.flags.C = (prev_a_value & 0b00000001) != 0;
+    return { T_CYC(1), 1, false };
 }
 
 SM83::instr_ret_info SM83::RRCA() {
-    print_error("IT'S TIME TO STOP! The programmer has a nap. Hold out! Programmer!");
+    // RRCA: Rotate right accumulator (0b00001111)
+    uint8_t prev_a_value = registers.A;
+    uint8_t result = (registers.A >> 1) | (registers.A << 7);
+    registers.A = result;
+    registers.flags.Z = 0;
+    registers.flags.N = 0;
+    registers.flags.H = 0;
+    registers.flags.C = (prev_a_value & 0b00000001) != 0;
+    return { T_CYC(1), 1, false };
 }
 
 SM83::instr_ret_info SM83::RST() {
@@ -984,21 +1016,90 @@ SM83::instr_ret_info SM83::RES() {
 
     // RES b, (HL): Reset bit (indirect HL) (0b10bbb110)
     else if ((registers.IR & 0b11000111) == 0b10000110) {
-        //TODO
+        uint8_t bit_index = (registers.IR & 0b00111000) >> 3;
+        uint8_t data = fetch(registers.HL);
+        uint8_t bit_mask = ~(1 << bit_index);
+        //TODO: Use proper bus write call
+        //bus.write(registers.HL, data & bit_mask);
+        return { T_CYC(4), 2, false };
     }
 
 
     print_error("Invalid opcode passed to RES");
 }
 
-SM83::instr_ret_info SM83::RL() {}
-SM83::instr_ret_info SM83::RLC() {}
+SM83::instr_ret_info SM83::RL() {
+    // RL r: Rotate left (register) (0b00010xxx)
+    if (registers.IR >> 3 == 0b00010) {
+        uint8_t reg_index = registers.IR & 0b00000111;
+        uint8_t prev_value = register_8_index_read(reg_index);
+        uint8_t result = (prev_value << 1) | registers.flags.C;
+        register_8_index_write(reg_index, result);
+        registers.flags.Z = result == 0;
+        registers.flags.N = 0;
+        registers.flags.H = 0;
+        registers.flags.C = (prev_value & 0b10000000) != 0;
+        return { T_CYC(2), 2, false };
+    }
+
+    // RL (HL): Rotate left (indirect HL)
+    else if (registers.IR == 0b00010110) {
+        uint8_t prev_value = fetch(registers.HL);
+        uint8_t result = (prev_value << 1) | registers.flags.C;
+        //TODO: Use proper bus write call
+        //bus.write(registers.HL, result);
+        registers.flags.Z = result == 0;
+        registers.flags.N = 0;
+        registers.flags.H = 0;
+        registers.flags.C = (prev_value & 0b10000000) != 0;
+        return { T_CYC(4), 2, false };
+    }
+
+    print_error("Invalid opcode passed to RL");
+}
+
+SM83::instr_ret_info SM83::RLC() {
+
+}
+
 SM83::instr_ret_info SM83::RR() {}
-SM83::instr_ret_info SM83::SET() {}
-SM83::instr_ret_info SM83::SLA() {}
-SM83::instr_ret_info SM83::SRA() {}
-SM83::instr_ret_info SM83::SRL() {
-    // SRL (HL): Shift right logical (indirect HL)
+
+SM83::instr_ret_info SM83::SET() {
+
+}
+
+SM83::instr_ret_info SM83::SLA() {
+    // Shift Left Arithmetically the byte pointed to by HL.
+    if (registers.IR == 0b00101110) {
+        uint8_t prev_value = fetch(registers.HL);
+        uint8_t result = prev_value >> 1;
+
+        //TODO: Use proper bus write call
+        //bus.write(registers.HL, result);
+
+        registers.flags.Z = result == 0;
+        registers.flags.N = 0;
+        registers.flags.H = 0;
+        registers.flags.C = CARRY_8(result, prev_value);
+
+        return { T_CYC(4), 2, false };
+    }
+    // Shift Left Arithmetically register r8.
+    else if ((registers.IR >> 3) == 0b00101) {
+        uint8_t reg = registers.IR & 0b0111;
+        uint8_t prev_value = register_8_index_read(reg);
+        uint8_t result = prev_value >> 1 | 0b10000000;
+
+        register_8_index_write(reg, result);
+
+        registers.flags.Z = result == 0;
+        registers.flags.N = 0;
+        registers.flags.H = 0;
+        registers.flags.C = CARRY_8(result, prev_value);
+    }
+}
+SM83::instr_ret_info SM83::SRA() {
+    // Shift Left Arithmetically the byte pointed to by HL.
     if (registers.IR == 0b00111110) {
         uint8_t prev_value = fetch(registers.HL);
         uint8_t result = prev_value << 1 | 0b10000000;
@@ -1012,10 +1113,43 @@ SM83::instr_ret_info SM83::SRL() {
         registers.flags.C = CARRY_8(result, prev_value);
         return { T_CYC(4), 2, false };
     }
-    // SRL r: Shift right logical (register)
+    // Shift Right Arithmetically register r8(bit 7 of r8 is unchanged).
+    else if ((registers.IR >> 3) == 0b00111) {
+        uint8_t reg = registers.IR & 0b0111;
+        uint8_t prev_value = register_8_index_read(reg);
+        uint8_t result = prev_value << 1 | 0b10000000;
+
+        register_8_index_write(reg, result);
+
+        registers.flags.Z = result == 0;
+        registers.flags.N = 0;
+        registers.flags.H = 0;
+        registers.flags.C = CARRY_8(result, prev_value);
+        return { T_CYC(2), 2, false };
+    }
+    print_error("Invalid opcode passed to SRA");
+}
+SM83::instr_ret_info SM83::SRL() {
+    // Shift Right Logically the byte pointed to by HL.
+    if (registers.IR == 0b00111110) {
+        uint8_t prev_value = fetch(registers.HL);
+        uint8_t result = prev_value << 1;
+
+        //TODO: Use proper bus write call
+        //bus.write(registers.HL, result);
+
+        registers.flags.Z = result == 0;
+        registers.flags.N = 0;
+        registers.flags.H = 0;
+        registers.flags.C = CARRY_8(result, prev_value);
+        return { T_CYC(4), 2, false };
+    }
+    // Shift Right Logically register r8.
     else if ((registers.IR >> 3) == 0b00111) {
         uint8_t prev_value = register_8_index_read(registers.IR & 0b0111);
-        uint8_t result = prev_value << 1 | 0b10000000;
+        uint8_t result = prev_value << 1;
+
+
 
         registers.flags.Z = result == 0;
         registers.flags.N = 0;
