@@ -51,14 +51,6 @@ uint8_t SM83::read(uint16_t address) {
 
 }
 
-void SM83::writeWord(uint16_t address, uint16_t data) {
-
-}
-
-uint16_t SM83::readWord(uint16_t address) {
-
-}
-
 void SM83::decode_execute(uint8_t opcode) {
     // WARNING: remember that some ops change PC (e.g., CALL)
     // WARNING: Remember to handle IME_DEFER

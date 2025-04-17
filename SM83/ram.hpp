@@ -2,7 +2,7 @@
 #include <array>
 using namespace std;
 
-class Ram {
+class Ram : public Device {
 public:
     Ram();
     ~Ram();

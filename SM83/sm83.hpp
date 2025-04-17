@@ -71,8 +71,6 @@ public:
     void fill_instruction_array();
     void write(uint16_t address, uint8_t data) override;
     uint8_t read(uint16_t address) override;
-    void writeWord(uint16_t address, uint16_t data) override;
-    uint16_t readWord(uint16_t address) override;
 private:
     Registers registers;
 
