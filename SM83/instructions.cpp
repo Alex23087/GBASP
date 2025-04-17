@@ -695,7 +695,7 @@ SM83::instr_ret_info SM83::PREF() {
     // They're here to keep our convention of not modifying PC inside the instruction
     // (Unless it's an instruction that explicitly modifies PC)
     registers.PC--;
-    ret_info.cycles += 1;
+    // ret_info.cycles += 1;
 
     return ret_info;
 }
@@ -969,7 +969,6 @@ SM83::instr_ret_info SM83::XOR() {
     print_error("Invalid opcode passed to XOR");
 }
 
-
 SM83::instr_ret_info SM83::XXX() {
     print_error("Invalid opcode: Out of range");
 }
@@ -1059,13 +1058,87 @@ SM83::instr_ret_info SM83::RL() {
 }
 
 SM83::instr_ret_info SM83::RLC() {
+    // RLC [HL]: Rotate left indirect HL (0b00000110)
+    if (registers.IR == 0b00000110) {
+        uint8_t prev_value = fetch(registers.HL);
+        uint8_t result = (prev_value << 1) | (prev_value >> 7);
+        //TODO: Use proper bus write call
+        //bus.write(registers.HL, result);
+        registers.flags.Z = result == 0;
+        registers.flags.N = 0;
+        registers.flags.H = 0;
+        registers.flags.C = (prev_value & 0b10000000) != 0;
+        return { T_CYC(4), 2, false };
+    }
 
+    // RLC r: Rotate left (register) (0b00000xxx)
+    else if ((registers.IR >> 3) == 0b00000) {
+        uint8_t reg_index = registers.IR & 0b00000111;
+        uint8_t prev_value = register_8_index_read(reg_index);
+        uint8_t result = (prev_value << 1) | (prev_value >> 7);
+        register_8_index_write(reg_index, result);
+        registers.flags.Z = result == 0;
+        registers.flags.N = 0;
+        registers.flags.H = 0;
+        registers.flags.C = (prev_value & 0b10000000);
+    }
+
+    print_error("Invalid opcode passed to RLC");
 }
 
-SM83::instr_ret_info SM83::RR() {}
+SM83::instr_ret_info SM83::RR() {
+    // RR r: Rotate right (register) (0b00011xxx)
+    if (registers.IR >> 3 == 0b00011) {
+        uint8_t reg_index = registers.IR & 0b00000111;
+        uint8_t prev_value = register_8_index_read(reg_index);
+        uint8_t result = (prev_value >> 1) | (registers.flags.C << 7);
+        register_8_index_write(reg_index, result);
+        registers.flags.Z = result == 0;
+        registers.flags.N = 0;
+        registers.flags.H = 0;
+        registers.flags.C = (prev_value & 0b00000001) != 0;
+        return { T_CYC(2), 2, false };
+    }
+
+    // RR (HL): Rotate right (indirect HL)
+    else if (registers.IR == 0b00011110) {
+        uint8_t prev_value = fetch(registers.HL);
+        uint8_t result = (prev_value >> 1) | (registers.flags.C << 7);
+        //TODO: Use proper bus write call
+        //bus.write(registers.HL, result);
+        registers.flags.Z = result == 0;
+        registers.flags.N = 0;
+        registers.flags.H = 0;
+        registers.flags.C = (prev_value & 0b00000001) != 0;
+        return { T_CYC(4), 2, false };
+    }
+
+    print_error("Invalid opcode passed to RR");
+}
 
 SM83::instr_ret_info SM83::SET() {
+    // SET b, (HL): Set bit (indirect HL) (0b11bbb110)
+    if ((registers.IR & 0b11000111) == 0b11000110) {
+        uint8_t bit_index = (registers.IR & 0b00111000) >> 3;
+        uint8_t data = fetch(registers.HL);
+        uint8_t bit_mask = (1 << bit_index);
+        //TODO: Use proper bus write call
+        //bus.write(registers.HL, data & bit_mask);
+        return { T_CYC(4), 2, false };
+    }
 
+    // SET b, r: Set bit (register) (0b11bbbrrr)
+    else if ((registers.IR & 0b11000000) == 0b11000000) {
+        uint8_t bit_index = (registers.IR & 0b00111000) >> 3;
+        uint8_t reg_index = registers.IR & 0b00000111;
+
+        uint8_t data = register_8_index_read(reg_index);
+        uint8_t bit_mask = (1 << bit_index);
+        register_8_index_write(reg_index, data & bit_mask);
+
+        return { T_CYC(2), 2, false };
+    }
+    print_error("Invalid opcode passed to SET");
 }
 
 SM83::instr_ret_info SM83::SLA() {
@@ -1160,4 +1233,34 @@ SM83::instr_ret_info SM83::SRL() {
     print_error("Invalid opcode passed to SRL");
 }
 
-SM83::instr_ret_info SM83::SWAP() {}
+SM83::instr_ret_info SM83::SWAP() {
+    // SWAP (HL): Swap nibbles (indirect HL)
+    if (registers.IR == 0b00110110) {
+        uint8_t data = fetch(registers.HL);
+        uint8_t result = ((data & 0x0F) << 4) | ((data & 0xF0) >> 4);
+        //TODO: Use proper bus write call
+        //bus.write(registers.HL, result);
+        registers.flags.Z = result == 0;
+        registers.flags.N = 0;
+        registers.flags.H = 0;
+        registers.flags.C = 0;
+        return { T_CYC(4), 2, false };
+    }
+
+    // SWAP r: Swap nibbles (register)
+    else if ((registers.IR >> 3) == 0b00110) {
+        uint8_t reg_index = registers.IR & 0b00000111;
+        uint8_t data = register_8_index_read(reg_index);
+        uint8_t result = ((data & 0x0F) << 4) | ((data & 0xF0) >> 4);
+        register_8_index_write(reg_index, result);
+
+        registers.flags.Z = result == 0;
+        registers.flags.N = 0;
+        registers.flags.H = 0;
+        registers.flags.C = 0;
+
+        return { T_CYC(2), 2, false };
+    }
+
+    print_error("Invalid opcode passed to SWAP");
+}
