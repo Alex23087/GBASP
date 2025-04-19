@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <string>
 #include "device.hpp"
+#include "bus.hpp"
 
 #define REGISTER_PAIR(x,y) \
     union { \
@@ -54,7 +55,7 @@ typedef struct Registers {
     bool IME_DEFER : 1;         // Interrupt Master Enable deferred
 } Registers;
 
-class SM83 : public Device {
+class SM83 {
 public:
     typedef struct instr_ret_info { uint8_t cycles; uint8_t pc_incr; bool has_set_PC; } instr_ret_info;
     typedef instr_ret_info(SM83::* instruction_ptr)(void);
@@ -69,10 +70,10 @@ public:
     void run();
     void reset();
     void fill_instruction_array();
-    void write(uint16_t address, uint8_t data) override;
-    uint8_t read(uint16_t address) override;
+    void connect_to_bus(Bus* bus);
 private:
     Registers registers;
+    Bus* bus;
 
     uint32_t cycles;
     uint8_t fetch(uint16_t);

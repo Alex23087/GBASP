@@ -9,6 +9,7 @@ int main() {
     SM83 sm83;
     Bus bus;
     Ram ram;
+    sm83.connect_to_bus(&bus);
     bus.attach_device(0x0000, 0xFFFF, &ram);
     sm83.run();
 

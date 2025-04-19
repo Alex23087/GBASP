@@ -276,8 +276,8 @@ SM83::instr_ret_info SM83::DEC() {
     else if (registers.IR == 0b00110101) {
         uint8_t data = fetch(registers.HL);
         uint8_t result = data - 1;
-        //TODO: Use proper bus write call
-        //bus.write(registers.HL, result);
+
+        bus->write(registers.HL, result);
 
         registers.flags.Z = (result == 0 ? 1 : 0);
         registers.flags.N = 1;
@@ -334,8 +334,8 @@ SM83::instr_ret_info SM83::INC() {
     else if (registers.IR == 0b00110100) {
         uint8_t data = fetch(registers.HL);
         uint8_t result = data + 1;
-        //TODO: Use proper bus write call
-        //bus.write(registers.HL, result);
+
+        bus->write(registers.HL, result);
 
         registers.flags.Z = (result == 0 ? 1 : 0);
         registers.flags.N = 1;
@@ -447,16 +447,16 @@ SM83::instr_ret_info SM83::LD() {
     else if ((registers.IR >> 3) == 0b01110) {
         uint8_t reg_index = registers.IR & 0b0111;
         uint8_t data = register_8_index_read(reg_index);
-        //TODO: Use proper bus write call
-        //bus.write(registers.HL, data);
+
+        bus->write(registers.HL, data);
         return { T_CYC(2), 1, false };
     }
 
     // LD (HL), n: Load from immediate data (indirect HL)
     else if (registers.IR == 0b00110110) {
         uint8_t data = fetch(registers.PC + 1);
-        //TODO: Use proper bus write call
-        //bus.write(registers.HL, data);
+
+        bus->write(registers.HL, data);
         return { T_CYC(3), 2, false };
     }
 
@@ -477,16 +477,16 @@ SM83::instr_ret_info SM83::LD() {
     // LD (BC), A: Load from accumulator (indirect BC)
     else if (registers.IR == 0b00000010) {
         uint8_t data = registers.A;
-        //TODO: Use proper bus write call
-        //bus.write(registers.BC, data);
+
+        bus->write(registers.BC, data);
         return { T_CYC(2), 1, false };
     }
 
     // LD (DE), A: Load from accumulator (indirect DE)
     else if (registers.IR == 0b00010010) {
         uint8_t data = registers.A;
-        //TODO: Use proper bus write call
-        //bus.write(registers.DE, data);
+
+        bus->write(registers.DE, data);
         return { T_CYC(2), 1, false };
     }
 
@@ -506,8 +506,9 @@ SM83::instr_ret_info SM83::LD() {
         uint8_t msb = fetch(registers.PC + 2);
         uint16_t nn = (msb << 8) | lsb;
         uint8_t data = registers.A;
-        //TODO: Use proper bus write call
-        //bus.write(nn, data);
+
+        bus->write(nn, data);
+
         return { T_CYC(4), 3, false };
     }
 
@@ -522,8 +523,7 @@ SM83::instr_ret_info SM83::LD() {
     // LD (HL-), A: Load from accumulator (indirect HL, decrement)
     else if (registers.IR == 0b00110010) {
         uint8_t data = registers.A;
-        //TODO: Use proper bus write call
-        //bus.write(registers.HL, data);
+        bus->write(registers.HL, data);
         registers.HL--;
         return { T_CYC(2), 1, false };
     }
@@ -539,8 +539,8 @@ SM83::instr_ret_info SM83::LD() {
     // LD (HL+), A: Load from accumulator (indirect HL, increment)
     else if (registers.IR == 0b00100010) {
         uint8_t data = registers.A;
-        //TODO: Use proper bus write call
-        //bus.write(registers.HL, data);
+
+        bus->write(registers.HL, data);
         registers.HL++;
         return { T_CYC(2), 1, false };
     }
@@ -562,11 +562,11 @@ SM83::instr_ret_info SM83::LD() {
         uint16_t nn = (msb << 8) | lsb;
         uint8_t lsb_sp = LSB(registers.SP);
         uint8_t msb_sp = MSB(registers.SP);
-        //TODO: Use proper bus write call
-        //bus.write(nn, lsb_sp);
+
+        bus->write(nn, lsb_sp);
         nn++;
-        //TODO: Use proper bus write call
-        //bus.write(nn, msb_sp);
+
+        bus->write(nn, msb_sp);
         return { T_CYC(5), 3, false };
     }
 
@@ -604,8 +604,8 @@ SM83::instr_ret_info SM83::LDH() {
 
     // LDH (C), A: Load from accumulator (indirect 0xFF00+C)
     else if (registers.IR == 0b11100010) {
-        //TODO: Use proper bus write call
-        //bus.write((0xFF << 8) | registers.C, registers.A);
+
+        bus->write((0xFF << 8) | registers.C, registers.A);
         return { T_CYC(2), 1, false };
     }
 
@@ -621,8 +621,8 @@ SM83::instr_ret_info SM83::LDH() {
     else if (registers.IR == 0b11100000) {
         uint8_t data = fetch(registers.PC + 1);
         uint8_t addr = (0xFF << 8) | data;
-        //TODO: Use proper bus write call
-        //bus.write(addr, registers.A);
+
+        bus->write(addr, registers.A);
         return { T_CYC(3), 2, false };
     }
 
@@ -1018,8 +1018,8 @@ SM83::instr_ret_info SM83::RES() {
         uint8_t bit_index = (registers.IR & 0b00111000) >> 3;
         uint8_t data = fetch(registers.HL);
         uint8_t bit_mask = ~(1 << bit_index);
-        //TODO: Use proper bus write call
-        //bus.write(registers.HL, data & bit_mask);
+
+        bus->write(registers.HL, data & bit_mask);
         return { T_CYC(4), 2, false };
     }
 
@@ -1045,8 +1045,8 @@ SM83::instr_ret_info SM83::RL() {
     else if (registers.IR == 0b00010110) {
         uint8_t prev_value = fetch(registers.HL);
         uint8_t result = (prev_value << 1) | registers.flags.C;
-        //TODO: Use proper bus write call
-        //bus.write(registers.HL, result);
+
+        bus->write(registers.HL, result);
         registers.flags.Z = result == 0;
         registers.flags.N = 0;
         registers.flags.H = 0;
@@ -1062,8 +1062,8 @@ SM83::instr_ret_info SM83::RLC() {
     if (registers.IR == 0b00000110) {
         uint8_t prev_value = fetch(registers.HL);
         uint8_t result = (prev_value << 1) | (prev_value >> 7);
-        //TODO: Use proper bus write call
-        //bus.write(registers.HL, result);
+
+        bus->write(registers.HL, result);
         registers.flags.Z = result == 0;
         registers.flags.N = 0;
         registers.flags.H = 0;
@@ -1104,8 +1104,8 @@ SM83::instr_ret_info SM83::RR() {
     else if (registers.IR == 0b00011110) {
         uint8_t prev_value = fetch(registers.HL);
         uint8_t result = (prev_value >> 1) | (registers.flags.C << 7);
-        //TODO: Use proper bus write call
-        //bus.write(registers.HL, result);
+
+        bus->write(registers.HL, result);
         registers.flags.Z = result == 0;
         registers.flags.N = 0;
         registers.flags.H = 0;
@@ -1121,8 +1121,8 @@ SM83::instr_ret_info SM83::RRC() {
     if (registers.IR == 0b00001110) {
         uint8_t prev_value = fetch(registers.HL);
         uint8_t result = (prev_value >> 1) | (prev_value << 7);
-        //TODO: Use proper bus write call
-        //bus.write(registers.HL, result);
+
+        bus->write(registers.HL, result);
         registers.flags.Z = result == 0;
         registers.flags.N = 0;
         registers.flags.H = 0;
@@ -1155,8 +1155,8 @@ SM83::instr_ret_info SM83::SET() {
         uint8_t bit_index = (registers.IR & 0b00111000) >> 3;
         uint8_t data = fetch(registers.HL);
         uint8_t bit_mask = (1 << bit_index);
-        //TODO: Use proper bus write call
-        //bus.write(registers.HL, data & bit_mask);
+
+        bus->write(registers.HL, data & bit_mask);
         return { T_CYC(4), 2, false };
     }
 
@@ -1180,8 +1180,7 @@ SM83::instr_ret_info SM83::SLA() {
         uint8_t prev_value = fetch(registers.HL);
         uint8_t result = prev_value >> 1;
 
-        //TODO: Use proper bus write call
-        //bus.write(registers.HL, result);
+        bus->write(registers.HL, result);
 
         registers.flags.Z = result == 0;
         registers.flags.N = 0;
@@ -1210,8 +1209,7 @@ SM83::instr_ret_info SM83::SRA() {
         uint8_t prev_value = fetch(registers.HL);
         uint8_t result = prev_value << 1 | 0b10000000;
 
-        //TODO: Use proper bus write call
-        //bus.write(registers.HL, result);
+        bus->write(registers.HL, result);
 
         registers.flags.Z = result == 0;
         registers.flags.N = 0;
@@ -1241,8 +1239,7 @@ SM83::instr_ret_info SM83::SRL() {
         uint8_t prev_value = fetch(registers.HL);
         uint8_t result = prev_value << 1;
 
-        //TODO: Use proper bus write call
-        //bus.write(registers.HL, result);
+        bus->write(registers.HL, result);
 
         registers.flags.Z = result == 0;
         registers.flags.N = 0;
@@ -1271,8 +1268,8 @@ SM83::instr_ret_info SM83::SWAP() {
     if (registers.IR == 0b00110110) {
         uint8_t data = fetch(registers.HL);
         uint8_t result = ((data & 0x0F) << 4) | ((data & 0xF0) >> 4);
-        //TODO: Use proper bus write call
-        //bus.write(registers.HL, result);
+
+        bus->write(registers.HL, result);
         registers.flags.Z = result == 0;
         registers.flags.N = 0;
         registers.flags.H = 0;

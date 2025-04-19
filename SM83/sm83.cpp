@@ -42,14 +42,10 @@ void SM83::reset() {
     cycles = 0;
 }
 
-
-void SM83::write(uint16_t address, uint8_t data) {
-
+void SM83::connect_to_bus(Bus* bus) {
+    this->bus = bus;
 }
 
-uint8_t SM83::read(uint16_t address) {
-
-}
 
 void SM83::decode_execute(uint8_t opcode) {
     // WARNING: remember that some ops change PC (e.g., CALL)

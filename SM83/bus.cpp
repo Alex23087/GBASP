@@ -10,13 +10,16 @@ Bus::~Bus() {
 }
 
 
-
 void Bus::write(uint16_t address, uint8_t data) {
-
+    DeviceMapping* device = find_device(address);
+    uint16_t offset = address - device->first_address;
+    device->device->write(offset, data);
 }
 
 uint8_t Bus::read(uint16_t address) {
-
+    DeviceMapping* device = find_device(address);
+    uint16_t offset = address - device->first_address;
+    device->device->read(offset);
 }
 
 void Bus::attach_device(uint16_t first_address, uint16_t last_address, Device* device) {
