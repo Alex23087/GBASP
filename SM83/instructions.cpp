@@ -1116,6 +1116,39 @@ SM83::instr_ret_info SM83::RR() {
     print_error("Invalid opcode passed to RR");
 }
 
+SM83::instr_ret_info SM83::RRC() {
+    // RRC (HL): Rotate right circular (indirect HL) 00001110
+    if (registers.IR == 0b00001110) {
+        uint8_t prev_value = fetch(registers.HL);
+        uint8_t result = (prev_value >> 1) | (prev_value << 7);
+        //TODO: Use proper bus write call
+        //bus.write(registers.HL, result);
+        registers.flags.Z = result == 0;
+        registers.flags.N = 0;
+        registers.flags.H = 0;
+        registers.flags.C = (prev_value & 0b00000001) != 0;
+        return { T_CYC(4), 2, false };
+        return { T_CYC(4), 2, false };
+    }
+    // RRC r: Rotate right circular (register) 0b00001xxx
+    else if (registers.IR >> 3 == 0b00001) {
+        uint8_t reg_index = registers.IR & 0b00000111;
+        uint8_t prev_value = register_8_index_read(reg_index);
+        uint8_t result = (prev_value >> 1) | (prev_value << 7);
+
+        register_8_index_write(reg_index, result);
+
+        registers.flags.Z = result == 0;
+        registers.flags.N = 0;
+        registers.flags.H = 0;
+        registers.flags.C = (prev_value & 0b00000001);
+
+        return { T_CYC(2), 2, false };
+    }
+
+    print_error("Invalid opcode passed to RRC");
+}
+
 SM83::instr_ret_info SM83::SET() {
     // SET b, (HL): Set bit (indirect HL) (0b11bbb110)
     if ((registers.IR & 0b11000111) == 0b11000110) {

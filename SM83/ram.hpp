@@ -1,5 +1,7 @@
 #include <cstdint>
 #include <array>
+#include "device.hpp"
+
 using namespace std;
 
 class Ram : public Device {
