@@ -1,10 +1,10 @@
 #include <iostream>
-#include "sm83.hpp"
-#include "bus.hpp"
-#include "ram.hpp"
+#include "SM83/sm83.hpp"
+#include "SM83/bus.hpp"
+#include "SM83/ram.hpp"
 
 int main() {
-    std::cout << "Hello, World!" << std::endl;
+    std::cout << "Hello, Perkyello e Sal I'm alive!" << std::endl;
 
     SM83 sm83;
     Bus bus;
