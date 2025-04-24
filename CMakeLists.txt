@@ -7,27 +7,33 @@ project(GBASP VERSION 1.0 LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# Add Dear ImGui sources
+set(IMGUI_DIR "${CMAKE_SOURCE_DIR}/includes/imgui")
+set(IMGUI_BACKENDS_DIR "${IMGUI_DIR}/backends")
+
+set(IMGUI_SOURCES
+    ${IMGUI_DIR}/imgui.cpp
+    ${IMGUI_DIR}/imgui_draw.cpp
+    ${IMGUI_DIR}/imgui_widgets.cpp
+    ${IMGUI_DIR}/imgui_tables.cpp
+    ${IMGUI_BACKENDS_DIR}/imgui_impl_sdl3.cpp
+    ${IMGUI_BACKENDS_DIR}/imgui_impl_opengl3.cpp
+)
+
 # Add source files
 file(GLOB_RECURSE SOURCES src/*/*.cpp src/*/*.c src/*.cpp src/*.c)
-file(GLOB_RECURSE QT_SOURCES src/UI/*/*.cpp src/UI/*/*.c src/UI/*.cpp src/UI/*.c)
 
 # Create object library
-add_library(${PROJECT_NAME}_obj OBJECT ${SOURCES})
+add_library(${PROJECT_NAME}_obj OBJECT ${SOURCES} ${IMGUI_SOURCES})
 
 # Include directories
-target_include_directories(${PROJECT_NAME}_obj PRIVATE include)
+target_include_directories(${PROJECT_NAME}_obj PRIVATE ${IMGUI_DIR})
+target_include_directories(${PROJECT_NAME}_obj PRIVATE ${IMGUI_BACKENDS_DIR})
 
-# Find Qt6
-find_package(Qt6 REQUIRED COMPONENTS Core Widgets)
+# Find SDL3 package
+find_package(SDL3 REQUIRED CONFIG REQUIRED COMPONENTS SDL3-shared)
+find_package(OpenGL REQUIRED)
 
-# Set Qt6 link libraries
-target_link_libraries(${PROJECT_NAME}_obj PRIVATE Qt6::Core Qt6::Widgets)
-
-# Standard Qt project setup
-qt_standard_project_setup()
-
-# Create a Qt library for UI sources
-qt_add_library(${PROJECT_NAME}_ui STATIC ${QT_SOURCES})
 
 # Enable warnings
 if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
@@ -38,4 +44,6 @@ endif()
 
 # Add executable and link object files
 add_executable(${PROJECT_NAME} $<TARGET_OBJECTS:${PROJECT_NAME}_obj>)
-target_link_libraries(${PROJECT_NAME} PRIVATE ${PROJECT_NAME}_ui Qt6::Core Qt6::Widgets)
+target_link_libraries(${PROJECT_NAME}_obj PRIVATE SDL3::SDL3 OpenGL::GL)
+target_link_libraries(${PROJECT_NAME} PRIVATE SDL3::SDL3 OpenGL::GL)
+
