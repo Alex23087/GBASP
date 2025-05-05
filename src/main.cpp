@@ -2,7 +2,7 @@
 #include "SM83/sm83.hpp"
 #include "SM83/bus.hpp"
 #include "SM83/ram.hpp"
-#include "UI/debugger/debugger.hpp"
+#include "UI/main_ui.hpp"
 
 int main() {
     std::cout << "Hello, Perkyello e Sal I'm alive!" << std::endl;

@@ -8,16 +8,20 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Add Dear ImGui sources
-set(IMGUI_DIR "${CMAKE_SOURCE_DIR}/includes/imgui")
+set(INCLUDES_DIR "${CMAKE_SOURCE_DIR}/includes")
+set(IMGUI_DIR "${INCLUDES_DIR}/imgui")
 set(IMGUI_BACKENDS_DIR "${IMGUI_DIR}/backends")
+set(IMGUI_MEMORY_EDITOR_DIR "${INCLUDES_DIR}/imgui_club/imgui_memory_editor")
 
 set(IMGUI_SOURCES
     ${IMGUI_DIR}/imgui.cpp
     ${IMGUI_DIR}/imgui_draw.cpp
     ${IMGUI_DIR}/imgui_widgets.cpp
     ${IMGUI_DIR}/imgui_tables.cpp
+    ${IMGUI_DIR}/imgui_demo.cpp
+    ${IMGUI_DIR}/imgui_demo.cpp
     ${IMGUI_BACKENDS_DIR}/imgui_impl_sdl3.cpp
-    ${IMGUI_BACKENDS_DIR}/imgui_impl_opengl3.cpp
+    ${IMGUI_BACKENDS_DIR}/imgui_impl_sdlrenderer3.cpp
 )
 
 # Add source files
@@ -27,8 +31,10 @@ file(GLOB_RECURSE SOURCES src/*/*.cpp src/*/*.c src/*.cpp src/*.c)
 add_library(${PROJECT_NAME}_obj OBJECT ${SOURCES} ${IMGUI_SOURCES})
 
 # Include directories
+target_include_directories(${PROJECT_NAME}_obj PRIVATE ${IMGUI_MEMORY_EDITOR_DIR})
 target_include_directories(${PROJECT_NAME}_obj PRIVATE ${IMGUI_DIR})
 target_include_directories(${PROJECT_NAME}_obj PRIVATE ${IMGUI_BACKENDS_DIR})
+
 
 # Find SDL3 package
 find_package(SDL3 REQUIRED CONFIG REQUIRED COMPONENTS SDL3-shared)
