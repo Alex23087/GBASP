@@ -1,20 +1,14 @@
 #include <iostream>
-#include "SM83/sm83.hpp"
-#include "SM83/bus.hpp"
-#include "SM83/ram.hpp"
+#include "Hardware/gameboy.hpp"
 #include "UI/main_ui.hpp"
 
 int main() {
-    std::cout << "Hello, Perkyello e Sal I'm alive!" << std::endl;
+    std::cout << "I'M ALIVE!!!!!!!!" << std::endl;
 
-    SM83 sm83;
-    Bus bus;
-    Ram ram;
-    sm83.connect_to_bus(&bus);
-    bus.attach_device(0x0000, 0xFFFF, &ram);
-    sm83.run();
+    // Initialize the GameBoy hardware
+    GameBoy gameboy = initialize_gameboy();
 
-
+    // Initialize UI
     main_d(0, NULL);
 
     return 0;

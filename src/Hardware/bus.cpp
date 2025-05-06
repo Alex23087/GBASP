@@ -2,11 +2,10 @@
 #include "utils.hpp"
 
 Bus::Bus() {
-
+    printf("INITIALIZING BUS\n");
 }
 
 Bus::~Bus() {
-
 }
 
 

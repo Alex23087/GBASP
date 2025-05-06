@@ -1,13 +1,15 @@
+#pragma once
+
 #include <cstdint>
 #include <array>
 #include "device.hpp"
 
 using namespace std;
 
-class Ram : public Device {
+class RAM : public Device {
 public:
-    Ram();
-    ~Ram();
+    RAM();
+    ~RAM();
     void write(uint16_t address, uint8_t data);
     uint8_t read(uint16_t address);
 

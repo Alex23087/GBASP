@@ -5,13 +5,15 @@
 
 using namespace std;
 
-Ram::Ram() {};
-Ram::~Ram() {};
+RAM::RAM() {
+    printf("INITIALIZING RAM\n");
+};
+RAM::~RAM() {};
 
-void Ram::write(uint16_t address, uint8_t data) {
+void RAM::write(uint16_t address, uint8_t data) {
     memory.at(address) = data;
 }
 
-uint8_t Ram::read(uint16_t address) {
+uint8_t RAM::read(uint16_t address) {
     return memory.at(address);
 }

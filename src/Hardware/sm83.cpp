@@ -6,6 +6,7 @@
 #include <cstdint>
 
 SM83::SM83() {
+    printf("INITIALIZING SM83\n");
     reset();
 
     // TODO Initialise both instructions and prefix_instructions
