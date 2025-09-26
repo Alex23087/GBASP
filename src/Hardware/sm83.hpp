@@ -67,7 +67,7 @@ public:
 
     SM83();
     ~SM83();
-    void run();
+    uint8_t run(uint32_t cycles);
     void reset();
     void fill_instruction_array();
     void connect_to_bus(Bus* bus);
@@ -75,9 +75,8 @@ private:
     Registers registers;
     Bus* bus;
 
-    uint32_t cycles;
+    uint32_t cycle_count;
     uint8_t fetch(uint16_t);
-    void decode_execute(uint8_t opcode);
     std::vector<Instruction> instructions;
     std::vector<Instruction> prefix_instructions;
 

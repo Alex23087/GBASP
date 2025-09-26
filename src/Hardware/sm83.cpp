@@ -7,25 +7,43 @@
 
 SM83::SM83() {
     printf("INITIALIZING SM83\n");
+    fill_instruction_array();
     reset();
-
-    // TODO Initialise both instructions and prefix_instructions
 }
 
 SM83::~SM83() {
     // Destructor
 }
 
-void SM83::run() {
+/** This function handles the execution of the CPU for a specified number of T-cycles.
+ * The function returns the number of cycles exceeded for handling the edge case where the
+ * last completed instruction required more cycles than the ones available.
+ */
+uint8_t SM83::run(uint32_t cycles) {
+    uint8_t exceeding_cycles = 0;
     while (cycles > 0) {
         // Fetch
+        uint8_t opcode = fetch(registers.PC);
 
         // Decode & Execute
-
+        instr_ret_info ret_info = (this->*(instructions[opcode].operation))();
 
         // Update PC
+        if (!ret_info.has_set_PC) {
+            registers.PC += ret_info.pc_incr;
+        }
 
+        // Update cycles
+        if (ret_info.cycles > cycles) {
+            exceeding_cycles = ret_info.cycles - cycles;
+            cycles = 0;
+        } else {
+            cycles -= ret_info.cycles;
+        }
+        this->cycle_count += ret_info.cycles;
     }
+
+    return exceeding_cycles;
 }
 
 void SM83::reset() {
@@ -40,18 +58,11 @@ void SM83::reset() {
     registers.SP = 0;
     registers.IME = 0;
     registers.IME_DEFER = 0;
-    cycles = 0;
+    cycle_count = 0;
 }
 
 void SM83::connect_to_bus(Bus* bus) {
     this->bus = bus;
-}
-
-
-void SM83::decode_execute(uint8_t opcode) {
-    // WARNING: remember that some ops change PC (e.g., CALL)
-    // WARNING: Remember to handle IME_DEFER
-    // WARNING: Remember to handle interrupts
 }
 
 uint8_t SM83::register_8_index_read(uint8_t index) {
@@ -107,10 +118,8 @@ uint16_t SM83::register_16_index_read(uint8_t index) {
     switch (index) {
         case 0:
             return registers.BC;
-        case 1:
-            return registers.DE;
-        case 2:
-            return registers.HL;
+        case 1:// TODO: Add proper bus read/write function calls
+            // 
         case 3:
             return registers.SP;
         default:
@@ -138,18 +147,15 @@ void SM83::register_16_index_write(uint8_t index, uint16_t data) {
 }
 
 uint8_t SM83::fetch(uint16_t addr) {
-    // TODO: Add proper bus read/write function calls
-    //return bus.read(addr);
+    return bus->read(addr);
 }
 
 void SM83::push_stack(uint8_t data) {
     registers.SP -= 1;
-    // TODO: Add proper bus read/write function calls
-    // bus.write(registers.SP, data);
+    bus->write(registers.SP, data);
 }
 
 uint8_t SM83::pop_stack() {
     registers.SP += 1;
-    // TODO: Add proper bus read/write function calls
-    // return bus.read(registers.SP);
+    return bus->read(registers.SP);
 }

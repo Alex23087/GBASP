@@ -3,7 +3,7 @@
 #include "sm83.hpp"
 #include "utils.hpp"
 
-#define T_CYC(x) (x * 4)
+#define M_TO_T_CYC(x) (x * 4)
 #define CC(x, y) ((!registers.flags.Z ^ x) & ~y) || ((!registers.flags.C ^ x) & y)
 
 
@@ -20,7 +20,7 @@ SM83::instr_ret_info SM83::ADC() {
         registers.flags.H = CARRY_4(registers.A, prev_a_value);
         registers.flags.C = CARRY_8(registers.A, prev_a_value);
 
-        return { T_CYC(2) , 1, false };
+        return { M_TO_T_CYC(2) , 1, false };
     }
 
     // ADC r: Add with carry (register)
@@ -35,7 +35,7 @@ SM83::instr_ret_info SM83::ADC() {
         registers.flags.H = CARRY_4(registers.A, prev_a_value);
         registers.flags.C = CARRY_8(registers.A, prev_a_value);
 
-        return { T_CYC(1), 1, false };
+        return { M_TO_T_CYC(1), 1, false };
     }
 
     // ADC n: Add with carry (immediate)
@@ -50,7 +50,7 @@ SM83::instr_ret_info SM83::ADC() {
         registers.flags.H = CARRY_4(registers.A, prev_a_value);
         registers.flags.C = CARRY_8(registers.A, prev_a_value);
 
-        return { T_CYC(2), 2, false };
+        return { M_TO_T_CYC(2), 2, false };
     }
     print_error("Invalid opcode passed to ADC");
 }
@@ -67,7 +67,7 @@ SM83::instr_ret_info SM83::ADD() {
         registers.flags.H = CARRY_4(registers.A, prev_a_value);
         registers.flags.C = CARRY_8(registers.A, prev_a_value);
 
-        return { T_CYC(2) , 1, false };
+        return { M_TO_T_CYC(2) , 1, false };
     }
 
     // ADD r: Add (register)
@@ -82,7 +82,7 @@ SM83::instr_ret_info SM83::ADD() {
         registers.flags.H = CARRY_4(registers.A, prev_a_value);
         registers.flags.C = CARRY_8(registers.A, prev_a_value);
 
-        return { T_CYC(1), 1, false };
+        return { M_TO_T_CYC(1), 1, false };
     }
     // ADD n: Add (immediate)
     else if (registers.IR == 0b11000110) {
@@ -96,7 +96,7 @@ SM83::instr_ret_info SM83::ADD() {
         registers.flags.H = CARRY_4(registers.A, prev_a_value);
         registers.flags.C = CARRY_8(registers.A, prev_a_value);
 
-        return { T_CYC(2), 2, false };
+        return { M_TO_T_CYC(2), 2, false };
     }
     // ADD SP, e: Add to stack pointer (relative)
     else if (registers.IR == 0b11101000) {
@@ -108,7 +108,7 @@ SM83::instr_ret_info SM83::ADD() {
         registers.flags.N = 0;
         registers.flags.H = CARRY_4(registers.SP, prev_sp_value);
         registers.flags.C = CARRY_8(registers.SP, prev_sp_value);
-        return { T_CYC(4), 2, false };
+        return { M_TO_T_CYC(4), 2, false };
     }
 
     print_error("Invalid ADD operation");
@@ -125,7 +125,7 @@ SM83::instr_ret_info SM83::AND() {
         registers.flags.H = 1;
         registers.flags.C = 0;
 
-        return { T_CYC(2), 1, false };
+        return { M_TO_T_CYC(2), 1, false };
 
     }
     // AND r: Bitwise AND (register)
@@ -138,7 +138,7 @@ SM83::instr_ret_info SM83::AND() {
         registers.flags.H = 1;
         registers.flags.C = 0;
 
-        return { T_CYC(1), 1, false };
+        return { M_TO_T_CYC(1), 1, false };
     }
 
     // AND n: Bitwise AND (immediate)
@@ -151,7 +151,7 @@ SM83::instr_ret_info SM83::AND() {
         registers.flags.H = 1;
         registers.flags.C = 0;
 
-        return { T_CYC(2), 2, false };
+        return { M_TO_T_CYC(2), 2, false };
     }
     print_error("Invalid opcode passed to AND");
 }
@@ -165,7 +165,7 @@ SM83::instr_ret_info SM83::CALL() {
         push_stack(MSB(registers.PC));
         push_stack(LSB(registers.PC));
         registers.PC = nn;
-        return { T_CYC(6), 3, true };
+        return { M_TO_T_CYC(6), 3, true };
     }
 
     // CALL cc, nn: Call function (conditional)
@@ -180,9 +180,9 @@ SM83::instr_ret_info SM83::CALL() {
             push_stack(MSB(registers.PC));
             push_stack(LSB(registers.PC));
             registers.PC = nn;
-            return { T_CYC(6), 3, true };
+            return { M_TO_T_CYC(6), 3, true };
         }
-        return { T_CYC(3), 3, false };
+        return { M_TO_T_CYC(3), 3, false };
     }
 
     print_error("Invalid opcode passed to CALL");
@@ -192,7 +192,7 @@ SM83::instr_ret_info SM83::CCF() {
     registers.flags.N = false;
     registers.flags.H = false;
     registers.flags.H ^= true;
-    return { T_CYC(1), 1, false };
+    return { M_TO_T_CYC(1), 1, false };
 }
 
 SM83::instr_ret_info SM83::CP() {
@@ -208,7 +208,7 @@ SM83::instr_ret_info SM83::CP() {
         registers.flags.H = CARRY_4(result, prev_a_value);
         registers.flags.C = CARRY_8(result, prev_a_value);
 
-        return { T_CYC(2), 1, false };
+        return { M_TO_T_CYC(2), 1, false };
     }
 
     // CP n: Compare (immediate)
@@ -223,7 +223,7 @@ SM83::instr_ret_info SM83::CP() {
         registers.flags.H = CARRY_4(result, prev_a_value);
         registers.flags.C = CARRY_8(result, prev_a_value);
 
-        return { T_CYC(2), 2, false };
+        return { M_TO_T_CYC(2), 2, false };
     }
 
     // CP r: Compare (register)
@@ -238,7 +238,7 @@ SM83::instr_ret_info SM83::CP() {
         registers.flags.H = CARRY_4(result, prev_a_value);
         registers.flags.C = CARRY_8(result, prev_a_value);
 
-        return { T_CYC(1), 1, false };
+        return { M_TO_T_CYC(1), 1, false };
     }
 
     print_error("Invalid opcode passed to CP");
@@ -249,7 +249,7 @@ SM83::instr_ret_info SM83::CPL() {
     registers.A = ~registers.A;
     registers.flags.N = true;
     registers.flags.H = true;
-    return { T_CYC(1), 1, false };
+    return { M_TO_T_CYC(1), 1, false };
 }
 
 SM83::instr_ret_info SM83::DAA() {
@@ -269,7 +269,7 @@ SM83::instr_ret_info SM83::DEC() {
         registers.flags.Z = (result == 0 ? 1 : 0);
         registers.flags.N = 1;
         registers.flags.H = CARRY_4(result, prev_reg_value);
-        return { T_CYC(1), 1, false };
+        return { M_TO_T_CYC(1), 1, false };
     }
 
     // DEC (HL): Decrement (indirect HL)
@@ -282,7 +282,7 @@ SM83::instr_ret_info SM83::DEC() {
         registers.flags.Z = (result == 0 ? 1 : 0);
         registers.flags.N = 1;
         registers.flags.H = CARRY_4(result, data);
-        return { T_CYC(3), 1, false };
+        return { M_TO_T_CYC(3), 1, false };
     }
 
     // DEC rr: Decrement 16-bit register
@@ -290,7 +290,7 @@ SM83::instr_ret_info SM83::DEC() {
         // TODO: Does this not set flags? Verify
         uint8_t register_index = (registers.IR >> 4) & 0b011;
         register_16_index_write(register_index, register_16_index_read(register_index) - 1);
-        return { T_CYC(2), 1, false };
+        return { M_TO_T_CYC(2), 1, false };
     }
 
     print_error("Invalid opcode passed to DEC");
@@ -301,14 +301,14 @@ SM83::instr_ret_info SM83::DI() {
     // DI: Disable interrupts (0b11110011)
     registers.IME = false;
     registers.IME_DEFER = false;
-    return { T_CYC(1), 1, false };
+    return { M_TO_T_CYC(1), 1, false };
 }
 
 SM83::instr_ret_info SM83::EI() {
     ASSERT(registers.IR == 0b11111011);
     // EI: Enable interrupts (0b11111011)
     registers.IME_DEFER = true;
-    return { T_CYC(1), 1, false };
+    return { M_TO_T_CYC(1), 1, false };
 }
 
 SM83::instr_ret_info SM83::HALT() {
@@ -327,7 +327,7 @@ SM83::instr_ret_info SM83::INC() {
         registers.flags.Z = (result == 0 ? 1 : 0);
         registers.flags.N = 1;
         registers.flags.H = CARRY_4(result, prev_reg_value);
-        return { T_CYC(1), 1, false };
+        return { M_TO_T_CYC(1), 1, false };
     }
 
     // INC (HL): Increment (indirect HL)
@@ -340,7 +340,7 @@ SM83::instr_ret_info SM83::INC() {
         registers.flags.Z = (result == 0 ? 1 : 0);
         registers.flags.N = 1;
         registers.flags.H = CARRY_4(result, data);
-        return { T_CYC(3), 1, false };
+        return { M_TO_T_CYC(3), 1, false };
     }
 
     // INC rr: Increment 16-bit register
@@ -348,7 +348,7 @@ SM83::instr_ret_info SM83::INC() {
         // TODO: Does this not set flags? Verify
         uint8_t register_index = (registers.IR >> 4) & 0b011;
         register_16_index_write(register_index, register_16_index_read(register_index) + 1);
-        return { T_CYC(2), 1, false };
+        return { M_TO_T_CYC(2), 1, false };
     }
 
     print_error("Invalid opcode passed to INC");
@@ -363,7 +363,7 @@ SM83::instr_ret_info SM83::JP() {
 
         registers.PC = nn;
 
-        return { T_CYC(4), 3, true };
+        return { M_TO_T_CYC(4), 3, true };
     }
     // JP HL: Jump to HL
     else if (registers.IR == 0b11101001) {
@@ -371,7 +371,7 @@ SM83::instr_ret_info SM83::JP() {
 
         registers.PC = jump_val;
 
-        return { T_CYC(1), 1, true };
+        return { M_TO_T_CYC(1), 1, true };
     }
     // JP cc, nn: Jump (conditional)
     else if ((registers.IR >> 5) == 0b110) {
@@ -385,10 +385,10 @@ SM83::instr_ret_info SM83::JP() {
         bool condition = CC(c_l, c_m);
         if (condition) {
             registers.PC = nn;
-            return { T_CYC(4), 3, true };
+            return { M_TO_T_CYC(4), 3, true };
         }
 
-        return { T_CYC(3), 3, false };
+        return { M_TO_T_CYC(3), 3, false };
     }
     print_error("Invalid opcode passed to JP");
 }
@@ -398,7 +398,7 @@ SM83::instr_ret_info SM83::JR() {
     if (registers.IR == 0b00011000) {
         uint8_t offset = fetch(registers.PC + 1);
         registers.PC += offset;
-        return { T_CYC(3), 2, true };
+        return { M_TO_T_CYC(3), 2, true };
     }
 
     // JR cc, e: Relative jump (conditional)
@@ -410,9 +410,9 @@ SM83::instr_ret_info SM83::JR() {
         bool condition = CC(c_l, c_m);
         if (condition) {
             registers.PC += offset;
-            return { T_CYC(3), 2, true };
+            return { M_TO_T_CYC(3), 2, true };
         }
-        return { T_CYC(2), 2, false };
+        return { M_TO_T_CYC(2), 2, false };
     }
 
     print_error("Invalid opcode passed to JR");
@@ -424,7 +424,7 @@ SM83::instr_ret_info SM83::LD() {
         uint8_t reg_index_x = (registers.IR >> 3) & 0b0111;
         uint8_t reg_index_y = (registers.IR) & 0b0111;
         register_8_index_write(reg_index_x, register_8_index_read(reg_index_y));
-        return { T_CYC(1), 1, false };
+        return { M_TO_T_CYC(1), 1, false };
     }
 
     // LD r, n: Load register (immediate)
@@ -432,7 +432,7 @@ SM83::instr_ret_info SM83::LD() {
         uint8_t reg_index = (registers.IR >> 3) & 0b0111;
         uint8_t data = fetch(registers.PC + 1);
         register_8_index_write(reg_index, data);
-        return { T_CYC(2), 2, false };
+        return { M_TO_T_CYC(2), 2, false };
     }
 
     // LD r, (HL): Load register (indirect HL)
@@ -440,7 +440,7 @@ SM83::instr_ret_info SM83::LD() {
         uint8_t reg_index = (registers.IR >> 3) & 0b0111;
         uint8_t data = fetch(registers.HL);
         register_8_index_write(reg_index, data);
-        return { T_CYC(2), 1, false };
+        return { M_TO_T_CYC(2), 1, false };
     }
 
     // LD (HL), r: Load from register (indirect HL)
@@ -449,7 +449,7 @@ SM83::instr_ret_info SM83::LD() {
         uint8_t data = register_8_index_read(reg_index);
 
         bus->write(registers.HL, data);
-        return { T_CYC(2), 1, false };
+        return { M_TO_T_CYC(2), 1, false };
     }
 
     // LD (HL), n: Load from immediate data (indirect HL)
@@ -457,21 +457,21 @@ SM83::instr_ret_info SM83::LD() {
         uint8_t data = fetch(registers.PC + 1);
 
         bus->write(registers.HL, data);
-        return { T_CYC(3), 2, false };
+        return { M_TO_T_CYC(3), 2, false };
     }
 
     // LD A, (BC): Load accumulator (indirect BC)
     else if (registers.IR == 0b00001010) {
         uint8_t data = fetch(registers.BC);
         registers.A = data;
-        return { T_CYC(2), 1, false };
+        return { M_TO_T_CYC(2), 1, false };
     }
 
     // LD A, (DE): Load accumulator (indirect DE)
     else if (registers.IR == 0b00011010) {
         uint8_t data = fetch(registers.DE);
         registers.A = data;
-        return { T_CYC(2), 1, false };
+        return { M_TO_T_CYC(2), 1, false };
     }
 
     // LD (BC), A: Load from accumulator (indirect BC)
@@ -479,7 +479,7 @@ SM83::instr_ret_info SM83::LD() {
         uint8_t data = registers.A;
 
         bus->write(registers.BC, data);
-        return { T_CYC(2), 1, false };
+        return { M_TO_T_CYC(2), 1, false };
     }
 
     // LD (DE), A: Load from accumulator (indirect DE)
@@ -487,7 +487,7 @@ SM83::instr_ret_info SM83::LD() {
         uint8_t data = registers.A;
 
         bus->write(registers.DE, data);
-        return { T_CYC(2), 1, false };
+        return { M_TO_T_CYC(2), 1, false };
     }
 
     // LD A, (nn): Load accumulator (direct)
@@ -497,7 +497,7 @@ SM83::instr_ret_info SM83::LD() {
         uint16_t nn = (msb << 8) | lsb;
         uint8_t data = fetch(nn);
         registers.A = data;
-        return { T_CYC(4), 3, false };
+        return { M_TO_T_CYC(4), 3, false };
     }
 
     // LD (nn), A: Load from accumulator (direct)
@@ -509,7 +509,7 @@ SM83::instr_ret_info SM83::LD() {
 
         bus->write(nn, data);
 
-        return { T_CYC(4), 3, false };
+        return { M_TO_T_CYC(4), 3, false };
     }
 
     // LD A, (HL-): Load accumulator (indirect HL, decrement)
@@ -517,7 +517,7 @@ SM83::instr_ret_info SM83::LD() {
         uint8_t data = fetch(registers.HL);
         registers.A = data;
         registers.HL--;
-        return { T_CYC(2), 1, false };
+        return { M_TO_T_CYC(2), 1, false };
     }
 
     // LD (HL-), A: Load from accumulator (indirect HL, decrement)
@@ -525,7 +525,7 @@ SM83::instr_ret_info SM83::LD() {
         uint8_t data = registers.A;
         bus->write(registers.HL, data);
         registers.HL--;
-        return { T_CYC(2), 1, false };
+        return { M_TO_T_CYC(2), 1, false };
     }
 
     // LD A, (HL+): Load accumulator (indirect HL, increment)
@@ -533,7 +533,7 @@ SM83::instr_ret_info SM83::LD() {
         uint8_t data = fetch(registers.HL);
         registers.A = data;
         registers.HL++;
-        return { T_CYC(2), 1, false };
+        return { M_TO_T_CYC(2), 1, false };
     }
 
     // LD (HL+), A: Load from accumulator (indirect HL, increment)
@@ -542,7 +542,7 @@ SM83::instr_ret_info SM83::LD() {
 
         bus->write(registers.HL, data);
         registers.HL++;
-        return { T_CYC(2), 1, false };
+        return { M_TO_T_CYC(2), 1, false };
     }
 
     // LD rr, nn: Load 16-bit register / register pair
@@ -552,7 +552,7 @@ SM83::instr_ret_info SM83::LD() {
         uint8_t msb = fetch(registers.PC + 2);
         uint16_t nn = (msb << 8) | lsb;
         register_16_index_write(register_index, nn);
-        return { T_CYC(3), 3, false };
+        return { M_TO_T_CYC(3), 3, false };
     }
 
     // LD (nn), SP: Load from stack pointer (direct)
@@ -567,13 +567,13 @@ SM83::instr_ret_info SM83::LD() {
         nn++;
 
         bus->write(nn, msb_sp);
-        return { T_CYC(5), 3, false };
+        return { M_TO_T_CYC(5), 3, false };
     }
 
     // LD SP, HL: Load stack pointer from HL
     else if (registers.IR == 0b11111001) {
         registers.SP = registers.HL;
-        return { T_CYC(2), 1, false };
+        return { M_TO_T_CYC(2), 1, false };
     }
 
     // LD HL, SP+e: Load HL from adjusted stack pointer
@@ -586,7 +586,7 @@ SM83::instr_ret_info SM83::LD() {
         registers.flags.H = CARRY_4(registers.HL, registers.SP);
         registers.flags.C = CARRY_8(registers.HL, registers.SP);
 
-        return { T_CYC(3), 2, false };
+        return { M_TO_T_CYC(3), 2, false };
     }
 
     // I want a 20th LD please 😭  (AHAHAH ONLY 19 😹🫵)
@@ -599,14 +599,14 @@ SM83::instr_ret_info SM83::LDH() {
     if (registers.IR == 0b11110010) {
         uint8_t data = fetch((0xFF << 8) | registers.C);
         registers.A = data;
-        return { T_CYC(2), 1, false };
+        return { M_TO_T_CYC(2), 1, false };
     }
 
     // LDH (C), A: Load from accumulator (indirect 0xFF00+C)
     else if (registers.IR == 0b11100010) {
 
         bus->write((0xFF << 8) | registers.C, registers.A);
-        return { T_CYC(2), 1, false };
+        return { M_TO_T_CYC(2), 1, false };
     }
 
     // LDH A, (n): Load accumulator (direct 0xFF00+n)
@@ -614,7 +614,7 @@ SM83::instr_ret_info SM83::LDH() {
         uint8_t data = fetch(registers.PC + 1);
         uint8_t addr = (0xFF << 8) | data;
         registers.A = fetch(addr);
-        return { T_CYC(3), 2, false };
+        return { M_TO_T_CYC(3), 2, false };
     }
 
     // LDH (n), A: Load from accumulator (direct 0xFF00+n)
@@ -623,14 +623,14 @@ SM83::instr_ret_info SM83::LDH() {
         uint8_t addr = (0xFF << 8) | data;
 
         bus->write(addr, registers.A);
-        return { T_CYC(3), 2, false };
+        return { M_TO_T_CYC(3), 2, false };
     }
 
     print_error("Invalid opcode passed to LDH");
 }
 
 SM83::instr_ret_info SM83::NOP() {
-    return { T_CYC(1), 1, false };
+    return { M_TO_T_CYC(1), 1, false };
 }
 
 SM83::instr_ret_info SM83::OR() {
@@ -644,7 +644,7 @@ SM83::instr_ret_info SM83::OR() {
         registers.flags.N = 0;
         registers.flags.H = 0;
         registers.flags.C = 0;
-        return { T_CYC(2), 1, false };
+        return { M_TO_T_CYC(2), 1, false };
     }
     // OR r: Bitwise OR (register)
     else if ((registers.IR >> 3) == 0b10110) {
@@ -656,7 +656,7 @@ SM83::instr_ret_info SM83::OR() {
         registers.flags.N = 0;
         registers.flags.H = 0;
         registers.flags.C = 0;
-        return { T_CYC(1), 1, false };
+        return { M_TO_T_CYC(1), 1, false };
     }
     // OR n: Bitwise OR (immediate)
     else if (registers.IR == 0b11110110) {
@@ -668,7 +668,7 @@ SM83::instr_ret_info SM83::OR() {
         registers.flags.N = 0;
         registers.flags.H = 0;
         registers.flags.C = 0;
-        return { T_CYC(2), 2, false };
+        return { M_TO_T_CYC(2), 2, false };
     }
     print_error("Invalid opcode passed to OR");
 }
@@ -682,7 +682,7 @@ SM83::instr_ret_info SM83::POP() {
 
     register_16_index_write(rr, data);
 
-    return { T_CYC(3), 1 , false };
+    return { M_TO_T_CYC(3), 1 , false };
 }
 
 SM83::instr_ret_info SM83::PREF() {
@@ -710,7 +710,7 @@ SM83::instr_ret_info SM83::PUSH() {
     push_stack(msb);
     push_stack(lsb);
 
-    return { T_CYC(4), 1, false };
+    return { M_TO_T_CYC(4), 1, false };
 }
 
 SM83::instr_ret_info SM83::RET() {
@@ -726,9 +726,9 @@ SM83::instr_ret_info SM83::RET() {
         bool condition = CC(c_l, c_m);
         if (condition) {
             registers.PC = nn;
-            return { T_CYC(5), 1, true };
+            return { M_TO_T_CYC(5), 1, true };
         }
-        return { T_CYC(2), 1, false };
+        return { M_TO_T_CYC(2), 1, false };
     }
     // RET: Return from function
     else if (registers.IR == 0b11001001) {
@@ -738,7 +738,7 @@ SM83::instr_ret_info SM83::RET() {
 
         registers.PC = nn;
 
-        return { T_CYC(4), 1, true };
+        return { M_TO_T_CYC(4), 1, true };
     }
     print_error("Invalid opcode passed to RET");
 }
@@ -752,7 +752,7 @@ SM83::instr_ret_info SM83::RETI() {
     registers.PC = nn;
     registers.IME = true;
 
-    return { T_CYC(4), 1, true };
+    return { M_TO_T_CYC(4), 1, true };
 }
 
 SM83::instr_ret_info SM83::RLA() {
@@ -775,7 +775,7 @@ SM83::instr_ret_info SM83::RLCA() {
     registers.flags.N = 0;
     registers.flags.H = 0;
     registers.flags.C = (prev_a_value & 0b10000000) != 0;
-    return { T_CYC(1), 1, false };
+    return { M_TO_T_CYC(1), 1, false };
 }
 
 SM83::instr_ret_info SM83::RRA() {
@@ -787,7 +787,7 @@ SM83::instr_ret_info SM83::RRA() {
     registers.flags.N = 0;
     registers.flags.H = 0;
     registers.flags.C = (prev_a_value & 0b00000001) != 0;
-    return { T_CYC(1), 1, false };
+    return { M_TO_T_CYC(1), 1, false };
 }
 
 SM83::instr_ret_info SM83::RRCA() {
@@ -799,7 +799,7 @@ SM83::instr_ret_info SM83::RRCA() {
     registers.flags.N = 0;
     registers.flags.H = 0;
     registers.flags.C = (prev_a_value & 0b00000001) != 0;
-    return { T_CYC(1), 1, false };
+    return { M_TO_T_CYC(1), 1, false };
 }
 
 SM83::instr_ret_info SM83::RST() {
@@ -813,7 +813,7 @@ SM83::instr_ret_info SM83::RST() {
 
     registers.PC = nn;
 
-    return { T_CYC(4), 1, true };
+    return { M_TO_T_CYC(4), 1, true };
 }
 
 SM83::instr_ret_info SM83::SBC() {
@@ -829,7 +829,7 @@ SM83::instr_ret_info SM83::SBC() {
         registers.flags.H = CARRY_4(registers.A, prev_a_value);
         registers.flags.C = CARRY_8(registers.A, prev_a_value);
 
-        return{ T_CYC(2), 2, false };
+        return{ M_TO_T_CYC(2), 2, false };
     }
     //SBC(HL) : Subtract with carry(indirect HL)
     else if (registers.IR == 0b10011110) {
@@ -843,7 +843,7 @@ SM83::instr_ret_info SM83::SBC() {
         registers.flags.H = CARRY_4(registers.A, prev_a_value);
         registers.flags.C = CARRY_8(registers.A, prev_a_value);
 
-        return { T_CYC(2), 1, false };
+        return { M_TO_T_CYC(2), 1, false };
     }
     // SBC r: Subtract with carry (register)
     else if ((registers.IR >> 3) == 0b10011) {
@@ -857,7 +857,7 @@ SM83::instr_ret_info SM83::SBC() {
         registers.flags.H = CARRY_4(registers.A, prev_a_value);
         registers.flags.C = CARRY_8(registers.A, prev_a_value);
 
-        return  { T_CYC(1), 1, false };
+        return  { M_TO_T_CYC(1), 1, false };
     }
     print_error("Invalid opcode passed to SBC");
 }
@@ -868,7 +868,7 @@ SM83::instr_ret_info SM83::SCF() {
     registers.flags.H = 0;
     registers.flags.C = 1;
 
-    return{ T_CYC(1), 1, false };
+    return{ M_TO_T_CYC(1), 1, false };
 }
 
 SM83::instr_ret_info SM83::STOP() {
@@ -888,7 +888,7 @@ SM83::instr_ret_info SM83::SUB() {
         registers.flags.H = CARRY_4(registers.A, prev_a_value);
         registers.flags.C = CARRY_8(registers.A, prev_a_value);
 
-        return { T_CYC(2), 1, false };
+        return { M_TO_T_CYC(2), 1, false };
     }
     // SUB n: Subtract (immediate)
     else if (registers.IR == 0b11010110) {
@@ -902,7 +902,7 @@ SM83::instr_ret_info SM83::SUB() {
         registers.flags.H = CARRY_4(registers.A, prev_a_value);
         registers.flags.C = CARRY_8(registers.A, prev_a_value);
 
-        return{ T_CYC(2), 2, false };
+        return{ M_TO_T_CYC(2), 2, false };
 
     }
     // SUB r: Subtract (register)
@@ -917,7 +917,7 @@ SM83::instr_ret_info SM83::SUB() {
         registers.flags.H = CARRY_4(registers.A, prev_a_value);
         registers.flags.C = CARRY_8(registers.A, prev_a_value);
 
-        return { T_CYC(1), 1, false };
+        return { M_TO_T_CYC(1), 1, false };
     }
 
     print_error("Invalid opcode passed to SUB");
@@ -936,7 +936,7 @@ SM83::instr_ret_info SM83::XOR() {
         registers.flags.H = 0;
         registers.flags.C = 0;
 
-        return { T_CYC(2), 1, false };
+        return { M_TO_T_CYC(2), 1, false };
     }
     // XOR n: Bitwise XOR (immediate)
     else if (registers.IR == 0b11101110) {
@@ -950,7 +950,7 @@ SM83::instr_ret_info SM83::XOR() {
         registers.flags.H = 0;
         registers.flags.C = 0;
 
-        return { T_CYC(2), 2, false };
+        return { M_TO_T_CYC(2), 2, false };
     }
     // XOR r: Bitwise XOR (register)
     else if ((registers.IR >> 3) == 0b10101) {
@@ -964,7 +964,7 @@ SM83::instr_ret_info SM83::XOR() {
         registers.flags.H = 0;
         registers.flags.C = 0;
 
-        return { T_CYC(1), 1, false };
+        return { M_TO_T_CYC(1), 1, false };
     }
     print_error("Invalid opcode passed to XOR");
 }
@@ -983,7 +983,7 @@ SM83::instr_ret_info SM83::BIT() {
         registers.flags.Z = (data & bit_mask) == 0;
         registers.flags.N = 0;
         registers.flags.H = 1;
-        return { T_CYC(3), 2, false };
+        return { M_TO_T_CYC(3), 2, false };
     }
 
     // BIT b, r: Test bit (register) (0b01bbbrrr)
@@ -996,7 +996,7 @@ SM83::instr_ret_info SM83::BIT() {
         registers.flags.Z = (data & bit_mask) == 0;
         registers.flags.N = 0;
         registers.flags.H = 1;
-        return { T_CYC(2), 2, false };
+        return { M_TO_T_CYC(2), 2, false };
     }
 
     print_error("Invalid opcode passed to BIT");
@@ -1010,7 +1010,7 @@ SM83::instr_ret_info SM83::RES() {
         uint8_t data = register_8_index_read(reg_index);
         uint8_t bit_mask = ~(1 << bit_index);
         register_8_index_write(reg_index, data & bit_mask);
-        return { T_CYC(2), 2, false };
+        return { M_TO_T_CYC(2), 2, false };
     }
 
     // RES b, (HL): Reset bit (indirect HL) (0b10bbb110)
@@ -1020,7 +1020,7 @@ SM83::instr_ret_info SM83::RES() {
         uint8_t bit_mask = ~(1 << bit_index);
 
         bus->write(registers.HL, data & bit_mask);
-        return { T_CYC(4), 2, false };
+        return { M_TO_T_CYC(4), 2, false };
     }
 
 
@@ -1038,7 +1038,7 @@ SM83::instr_ret_info SM83::RL() {
         registers.flags.N = 0;
         registers.flags.H = 0;
         registers.flags.C = (prev_value & 0b10000000) != 0;
-        return { T_CYC(2), 2, false };
+        return { M_TO_T_CYC(2), 2, false };
     }
 
     // RL (HL): Rotate left (indirect HL)
@@ -1051,7 +1051,7 @@ SM83::instr_ret_info SM83::RL() {
         registers.flags.N = 0;
         registers.flags.H = 0;
         registers.flags.C = (prev_value & 0b10000000) != 0;
-        return { T_CYC(4), 2, false };
+        return { M_TO_T_CYC(4), 2, false };
     }
 
     print_error("Invalid opcode passed to RL");
@@ -1068,7 +1068,7 @@ SM83::instr_ret_info SM83::RLC() {
         registers.flags.N = 0;
         registers.flags.H = 0;
         registers.flags.C = (prev_value & 0b10000000) != 0;
-        return { T_CYC(4), 2, false };
+        return { M_TO_T_CYC(4), 2, false };
     }
 
     // RLC r: Rotate left (register) (0b00000xxx)
@@ -1097,7 +1097,7 @@ SM83::instr_ret_info SM83::RR() {
         registers.flags.N = 0;
         registers.flags.H = 0;
         registers.flags.C = (prev_value & 0b00000001) != 0;
-        return { T_CYC(2), 2, false };
+        return { M_TO_T_CYC(2), 2, false };
     }
 
     // RR (HL): Rotate right (indirect HL)
@@ -1110,7 +1110,7 @@ SM83::instr_ret_info SM83::RR() {
         registers.flags.N = 0;
         registers.flags.H = 0;
         registers.flags.C = (prev_value & 0b00000001) != 0;
-        return { T_CYC(4), 2, false };
+        return { M_TO_T_CYC(4), 2, false };
     }
 
     print_error("Invalid opcode passed to RR");
@@ -1127,8 +1127,8 @@ SM83::instr_ret_info SM83::RRC() {
         registers.flags.N = 0;
         registers.flags.H = 0;
         registers.flags.C = (prev_value & 0b00000001) != 0;
-        return { T_CYC(4), 2, false };
-        return { T_CYC(4), 2, false };
+        return { M_TO_T_CYC(4), 2, false };
+        return { M_TO_T_CYC(4), 2, false };
     }
     // RRC r: Rotate right circular (register) 0b00001xxx
     else if (registers.IR >> 3 == 0b00001) {
@@ -1143,7 +1143,7 @@ SM83::instr_ret_info SM83::RRC() {
         registers.flags.H = 0;
         registers.flags.C = (prev_value & 0b00000001);
 
-        return { T_CYC(2), 2, false };
+        return { M_TO_T_CYC(2), 2, false };
     }
 
     print_error("Invalid opcode passed to RRC");
@@ -1157,7 +1157,7 @@ SM83::instr_ret_info SM83::SET() {
         uint8_t bit_mask = (1 << bit_index);
 
         bus->write(registers.HL, data & bit_mask);
-        return { T_CYC(4), 2, false };
+        return { M_TO_T_CYC(4), 2, false };
     }
 
     // SET b, r: Set bit (register) (0b11bbbrrr)
@@ -1169,7 +1169,7 @@ SM83::instr_ret_info SM83::SET() {
         uint8_t bit_mask = (1 << bit_index);
         register_8_index_write(reg_index, data & bit_mask);
 
-        return { T_CYC(2), 2, false };
+        return { M_TO_T_CYC(2), 2, false };
     }
     print_error("Invalid opcode passed to SET");
 }
@@ -1187,7 +1187,7 @@ SM83::instr_ret_info SM83::SLA() {
         registers.flags.H = 0;
         registers.flags.C = CARRY_8(result, prev_value);
 
-        return { T_CYC(4), 2, false };
+        return { M_TO_T_CYC(4), 2, false };
     }
     // Shift Left Arithmetically register r8.
     else if ((registers.IR >> 3) == 0b00101) {
@@ -1215,7 +1215,7 @@ SM83::instr_ret_info SM83::SRA() {
         registers.flags.N = 0;
         registers.flags.H = 0;
         registers.flags.C = CARRY_8(result, prev_value);
-        return { T_CYC(4), 2, false };
+        return { M_TO_T_CYC(4), 2, false };
     }
     // Shift Right Arithmetically register r8(bit 7 of r8 is unchanged).
     else if ((registers.IR >> 3) == 0b00111) {
@@ -1229,7 +1229,7 @@ SM83::instr_ret_info SM83::SRA() {
         registers.flags.N = 0;
         registers.flags.H = 0;
         registers.flags.C = CARRY_8(result, prev_value);
-        return { T_CYC(2), 2, false };
+        return { M_TO_T_CYC(2), 2, false };
     }
     print_error("Invalid opcode passed to SRA");
 }
@@ -1245,7 +1245,7 @@ SM83::instr_ret_info SM83::SRL() {
         registers.flags.N = 0;
         registers.flags.H = 0;
         registers.flags.C = CARRY_8(result, prev_value);
-        return { T_CYC(4), 2, false };
+        return { M_TO_T_CYC(4), 2, false };
     }
     // Shift Right Logically register r8.
     else if ((registers.IR >> 3) == 0b00111) {
@@ -1258,7 +1258,7 @@ SM83::instr_ret_info SM83::SRL() {
         registers.flags.N = 0;
         registers.flags.H = 0;
         registers.flags.C = CARRY_8(result, prev_value);
-        return { T_CYC(2), 2, false };
+        return { M_TO_T_CYC(2), 2, false };
     }
     print_error("Invalid opcode passed to SRL");
 }
@@ -1274,7 +1274,7 @@ SM83::instr_ret_info SM83::SWAP() {
         registers.flags.N = 0;
         registers.flags.H = 0;
         registers.flags.C = 0;
-        return { T_CYC(4), 2, false };
+        return { M_TO_T_CYC(4), 2, false };
     }
 
     // SWAP r: Swap nibbles (register)
@@ -1289,7 +1289,7 @@ SM83::instr_ret_info SM83::SWAP() {
         registers.flags.H = 0;
         registers.flags.C = 0;
 
-        return { T_CYC(2), 2, false };
+        return { M_TO_T_CYC(2), 2, false };
     }
 
     print_error("Invalid opcode passed to SWAP");

@@ -5,4 +5,6 @@
 */
 #pragma once
 
-void sm83_test();
+#include "../Hardware/gameboy.hpp"
+
+void sm83_test(GameBoy& gameboy);
