@@ -124,7 +124,7 @@ uint8_t SM83::register_8_index_read(uint8_t index) {
         case 7:
             return registers.A;
         default:
-            print_error("Invalid index passed register_8_index_read");
+            print_error("Invalid index passed to register_8_index_read");
     }
 }
 

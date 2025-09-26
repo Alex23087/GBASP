@@ -40,23 +40,23 @@
         uint8_t x; \
     }
 
-typedef struct Registers {
-    uint8_t IR;                 // Instruction Register
-    INTERRUPT_REGISTER(IE);     // Interrupt Enable
-    uint8_t A;                  // Accumulator
-    FLAG_REGISTER(F);           // Flags
-    REGISTER_PAIR(B, C);
-    REGISTER_PAIR(D, E);
-    REGISTER_PAIR(H, L);
-    uint16_t PC;                // Program Counter
-    uint16_t SP;                // Stack Pointer
-    INTERRUPT_REGISTER(IF);     // Interrupt Flag
-    bool IME : 1;               // Interrupt Master Enable
-    bool IME_DEFER : 1;         // Interrupt Master Enable deferred
-} Registers;
 
 class SM83 {
 public:
+    typedef struct Registers {
+        uint8_t IR;                 // Instruction Register
+        INTERRUPT_REGISTER(IE);     // Interrupt Enable
+        uint8_t A;                  // Accumulator
+        FLAG_REGISTER(F);           // Flags
+        REGISTER_PAIR(B, C);
+        REGISTER_PAIR(D, E);
+        REGISTER_PAIR(H, L);
+        uint16_t PC;                // Program Counter
+        uint16_t SP;                // Stack Pointer
+        INTERRUPT_REGISTER(IF);     // Interrupt Flag
+        bool IME : 1;               // Interrupt Master Enable
+        bool IME_DEFER : 1;         // Interrupt Master Enable deferred
+    } Registers;
     typedef struct instr_ret_info { uint8_t cycles; uint8_t pc_incr; bool has_set_PC; } instr_ret_info;
     typedef instr_ret_info(SM83::* instruction_ptr)(void);
 

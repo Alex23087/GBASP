@@ -191,7 +191,7 @@ SM83::instr_ret_info SM83::CALL() {
 SM83::instr_ret_info SM83::CCF() {
     registers.flags.N = false;
     registers.flags.H = false;
-    registers.flags.H ^= true;
+    registers.flags.C ^= true;
     return { M_TO_T_CYC(1), 1, false };
 }
 
@@ -1079,6 +1079,7 @@ SM83::instr_ret_info SM83::RLC() {
         registers.flags.N = 0;
         registers.flags.H = 0;
         registers.flags.C = (prev_value & 0b10000000);
+        return { M_TO_T_CYC(2), 2, false };
     }
 
     print_error("Invalid opcode passed to RLC");
@@ -1125,7 +1126,6 @@ SM83::instr_ret_info SM83::RRC() {
         registers.flags.N = 0;
         registers.flags.H = 0;
         registers.flags.C = (prev_value & 0b00000001) != 0;
-        return { M_TO_T_CYC(4), 2, false };
         return { M_TO_T_CYC(4), 2, false };
     }
     // RRC r: Rotate right circular (register) 0b00001xxx

@@ -7,6 +7,8 @@
 #include "sm83_test.hpp"
 #include "test_rom.hpp"
 
+#include "../Hardware/instructions_parser.hpp"
+
 void sm83_test(GameBoy& gameboy) {
 
     // Load the manual test commands into memory
@@ -19,5 +21,7 @@ void sm83_test(GameBoy& gameboy) {
     // Execute the test instructions
     gameboy.sm83.run(32);
 
-
+    uint8_t instr[] = { 0b11001110, 0, 0 };
+    Parser::parse_instr_info pii = Parser::ADC(instr);
+    printf("Parsed instruction: %s\n", pii.operation_pp.c_str());
 }
