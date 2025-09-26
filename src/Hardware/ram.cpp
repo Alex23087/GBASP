@@ -15,5 +15,9 @@ void RAM::write(uint16_t address, uint8_t data) {
 }
 
 uint8_t RAM::read(uint16_t address) {
-    return memory.at(address);
+    uint8_t out = memory.at(address);
+#if GBASP_DEBUG
+    printf("[WRAM] Read %02X from address %04X\n", out, address);
+#endif
+    return out;
 }

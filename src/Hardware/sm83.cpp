@@ -15,18 +15,56 @@ SM83::~SM83() {
     // Destructor
 }
 
+/** This function prints all the registers content.
+ */
+void SM83::print_registers() {
+    printf("PC = %u\t", this->registers.PC);
+    printf("IR = %u\t", this->registers.IR);
+    printf("IE = %u\t", this->registers.IE);
+    printf("A = %u\n", this->registers.A);
+
+    printf("F = %u\t", this->registers.F);
+    printf("B = %u\t", this->registers.B);
+    printf("C = %u\t", this->registers.C);
+    printf("BC = %u\t", this->registers.BC);
+
+    printf("D = %u\t", this->registers.D);
+    printf("E = %u\t", this->registers.E);
+    printf("DE = %u\n", this->registers.DE);
+
+    printf("H = %u\t", this->registers.H);
+    printf("L = %u\t", this->registers.L);
+    printf("HL = %u\t", this->registers.HL);
+
+    printf("SP = %u\n", this->registers.SP);
+
+    printf("F = %u\t", this->registers.F);
+    printf("IF = %u\t", this->registers.IF);
+
+    printf("IME = %u\t", this->registers.IME);
+    printf("IME_DEFER = %u\n", this->registers.IME_DEFER);
+
+    printf("\n");
+}
+
 /** This function handles the execution of the CPU for a specified number of T-cycles.
  * The function returns the number of cycles exceeded for handling the edge case where the
  * last completed instruction required more cycles than the ones available.
  */
 uint8_t SM83::run(uint32_t cycles) {
     uint8_t exceeding_cycles = 0;
+#if GBASP_DEBUG
+    print_registers();
+#endif
     while (cycles > 0) {
         // Fetch
-        uint8_t opcode = fetch(registers.PC);
+        registers.IR = fetch(registers.PC);
+#if GBASP_DEBUG
+        printf("Fetched opcode: %02X at PC: %04X\n", registers.IR, registers.PC);
+#endif
 
         // Decode & Execute
-        instr_ret_info ret_info = (this->*(instructions[opcode].operation))();
+        instr_ret_info ret_info = (this->*(instructions[registers.IR].operation))();
 
         // Update PC
         if (!ret_info.has_set_PC) {
@@ -41,6 +79,10 @@ uint8_t SM83::run(uint32_t cycles) {
             cycles -= ret_info.cycles;
         }
         this->cycle_count += ret_info.cycles;
+#if GBASP_DEBUG
+        printf("Cycle count: %u\n", this->cycle_count);
+        print_registers();
+#endif
     }
 
     return exceeding_cycles;

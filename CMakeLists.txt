@@ -1,5 +1,13 @@
 cmake_minimum_required(VERSION 3.16)
 
+option(GBASP_DEBUG "Enable debug mode" OFF)
+
+if(GBASP_DEBUG)
+    message(STATUS "Debug mode enabled")
+    add_compile_definitions(GBASP_DEBUG)
+    set(CMAKE_BUILD_TYPE Debug CACHE STRING "Build type" FORCE)
+endif()
+
 # Project name
 project(GBASP VERSION 1.0 LANGUAGES C CXX)
 
@@ -43,7 +51,7 @@ find_package(OpenGL REQUIRED)
 
 # Enable warnings
 if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-    target_compile_options(${PROJECT_NAME}_obj PRIVATE -Wall -Wextra)
+    target_compile_options(${PROJECT_NAME}_obj PRIVATE -Wall -Wextra -Werror -Wno-bool-operation)
 elseif (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     target_compile_options(${PROJECT_NAME}_obj PRIVATE /W4)
 endif()

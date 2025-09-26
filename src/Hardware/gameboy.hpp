@@ -10,4 +10,4 @@ typedef struct GameBoy {
     RAM ram;
 } GameBoy;
 
-GameBoy& initialize_gameboy();
+GameBoy initialize_gameboy();

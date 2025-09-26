@@ -14,4 +14,4 @@
 #define CARRY_8(x, y) (x > y)
 
 
-void print_error(std::string error);
+[[noreturn]] void print_error(std::string error);

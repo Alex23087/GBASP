@@ -764,6 +764,7 @@ SM83::instr_ret_info SM83::RLA() {
     registers.flags.N = 0;
     registers.flags.H = 0;
     registers.flags.C = (prev_a_value & 0b10000000) != 0;
+    return { M_TO_T_CYC(1), 1, false };
 }
 
 SM83::instr_ret_info SM83::RLCA() {
@@ -926,7 +927,6 @@ SM83::instr_ret_info SM83::SUB() {
 SM83::instr_ret_info SM83::XOR() {
     // XOR(HL) : Bitwise XOR(indirect HL)
     if (registers.IR == 0b10101110) {
-        uint8_t prev_a_value = registers.A;
         uint8_t xor_value = fetch(registers.HL);
 
         registers.A ^= xor_value;
@@ -940,7 +940,6 @@ SM83::instr_ret_info SM83::XOR() {
     }
     // XOR n: Bitwise XOR (immediate)
     else if (registers.IR == 0b11101110) {
-        uint8_t prev_a_value = registers.A;
         uint8_t xor_value = fetch(registers.PC + 1);
 
         registers.A ^= xor_value;
@@ -954,7 +953,6 @@ SM83::instr_ret_info SM83::XOR() {
     }
     // XOR r: Bitwise XOR (register)
     else if ((registers.IR >> 3) == 0b10101) {
-        uint8_t prev_a_value = registers.A;
         uint8_t xor_value = register_8_index_read(registers.IR & 0b0111);
 
         registers.A ^= xor_value;
@@ -1201,8 +1199,13 @@ SM83::instr_ret_info SM83::SLA() {
         registers.flags.N = 0;
         registers.flags.H = 0;
         registers.flags.C = CARRY_8(result, prev_value);
+
+        return { M_TO_T_CYC(4), 2, false };
     }
+
+    print_error("Invalid opcode passed to SLA");
 }
+
 SM83::instr_ret_info SM83::SRA() {
     // Shift Left Arithmetically the byte pointed to by HL.
     if (registers.IR == 0b00111110) {

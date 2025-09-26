@@ -71,6 +71,7 @@ public:
     void reset();
     void fill_instruction_array();
     void connect_to_bus(Bus* bus);
+    void print_registers();
 private:
     Registers registers;
     Bus* bus;

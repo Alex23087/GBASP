@@ -17,5 +17,7 @@ void sm83_test(GameBoy& gameboy) {
     }
 
     // Execute the test instructions
-    gameboy.sm83.run(100);
+    gameboy.sm83.run(32);
+
+
 }
