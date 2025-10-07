@@ -13,5 +13,8 @@
 #define CARRY_4(x, y) ((x & 0b00001111) > (y & 0b00001111))
 #define CARRY_8(x, y) (x > y)
 
+// #define TO_HEX(n) (std::to_string(n))
+// #define TO_HEX(n) (std::format("{:x}", n))
+std::string TO_HEX(uint8_t n);
 
 [[noreturn]] void print_error(std::string error);

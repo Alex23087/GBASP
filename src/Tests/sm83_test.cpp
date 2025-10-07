@@ -7,6 +7,7 @@
 #include "sm83_test.hpp"
 #include "test_rom.hpp"
 
+#include "../Hardware/initialize_parser_arrays.hpp"
 #include "../Hardware/instructions_parser.hpp"
 
 void sm83_test(GameBoy& gameboy) {
@@ -21,7 +22,18 @@ void sm83_test(GameBoy& gameboy) {
     // Execute the test instructions
     gameboy.sm83.run(32);
 
-    uint8_t instr[] = { 0b11001110, 0, 0 };
-    Parser::parse_instr_info pii = Parser::ADC(instr);
-    printf("Parsed instruction: %s\n", pii.operation_pp.c_str());
+    Parser::fill_instruction_array();
+    Parser::parse_instr_info pii;
+    uint32_t offset = 0;
+    for (int i = 0; i < 3; i++) {
+        pii = Parser::parse_instruction(test_rom + offset);
+        printf("Parsed instruction: %s\n", pii.operation_pp.c_str());
+        offset += pii.pc_incr;
+    }
+
+    for (uint8_t i = 0; i < 255; i++) {
+        uint8_t opcode[4] = { 0 };
+        opcode[0] = i;
+        printf("%s\n", Parser::parse_instruction(opcode).operation_pp.c_str());
+    }
 }

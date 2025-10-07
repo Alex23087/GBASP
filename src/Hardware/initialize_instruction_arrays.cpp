@@ -1,4 +1,5 @@
 #include "sm83.hpp"
+
 void SM83::fill_instruction_array() {
     instructions = {
 {"NOP", &SM83::NOP},  {"LD", &SM83::LD},  {"LD", &SM83::LD},  {"INC", &SM83::INC},

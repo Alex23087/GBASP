@@ -12,7 +12,7 @@ endif()
 project(GBASP VERSION 1.0 LANGUAGES C CXX)
 
 # Set C++ standard
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 17) 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Add Dear ImGui sources
@@ -51,7 +51,7 @@ find_package(OpenGL REQUIRED)
 
 # Enable warnings
 if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-    target_compile_options(${PROJECT_NAME}_obj PRIVATE -Wall -Wextra -Werror -Wno-bool-operation)
+    target_compile_options(${PROJECT_NAME}_obj PRIVATE -Wall -Wextra -Werror -Wno-bool-operation -Wno-unused-parameter)
 elseif (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     target_compile_options(${PROJECT_NAME}_obj PRIVATE /W4)
 endif()

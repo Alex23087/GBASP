@@ -1,3 +1,4 @@
+#pragma once
 #include "utils.hpp"
 
 #include <string>
@@ -6,8 +7,11 @@
 namespace Parser {
     typedef struct parse_instr_info { std::string operation_pp; uint8_t pc_incr; } parse_instr_info;
     typedef parse_instr_info(function_ptr)(uint8_t[]);
-    std::vector<function_ptr> instructions;
+    typedef struct function_ptr_container { function_ptr* operation; } function_ptr_container;
+    std::vector<function_ptr_container> instructions;
+    std::vector<function_ptr_container> prefix_instructions;
 
+    void fill_instruction_array();
 
     std::string register_8_to_register_name(uint8_t index) {
         switch (index) {
@@ -49,7 +53,7 @@ namespace Parser {
 
 
     parse_instr_info parse_instruction(uint8_t opcode[]) {
-        return (*instructions[opcode[0]])(opcode);
+        return (*instructions[opcode[0]].operation)(opcode);
     }
 
     // Unprefixed instructions
@@ -68,27 +72,34 @@ namespace Parser {
         // ADC n: Add with carry (immediate)
         else if (opcode[0] == 0b11001110) {
             uint8_t add_value = opcode[1];
-            return { "ADC " + add_value, 2 };
+            return { "ADC " + std::to_string(add_value), 2 };
         }
-        print_error("Invalid opcode passed to ADC");
+        print_error("Invalid opcode passed to ADC " + TO_HEX(opcode[0]));
     }
 
     parse_instr_info ADD(uint8_t opcode[]) {
         // ADD (HL): Add (indirect HL)
         if (opcode[0] == 0b10000110) {
-            return { "ADD [HL]" , 1 };
+            return { "ADD A [HL]" , 1 };
+        }
+
+        // ADD (HL) r: Add(16-bit register)
+        else if (opcode[0] & 0b11001111 == 0x00001001) {
+            uint8_t register_index = (opcode[0] >> 4) & 0b0011;
+            std::string regname = register_16_to_register_name(register_index);
+            return { "ADD [HL], " + regname, 1 };
         }
 
         // ADD r: Add (register)
-        else if ((opcode[1] >> 3) == 0b10000) {
+        else if ((opcode[0] >> 3) == 0b10000) {
             std::string reg_name = register_8_to_register_name(opcode[0] & 0b0111);
-            return { "ADD " + reg_name, 1 };
+            return { "ADD A, " + reg_name, 1 };
         }
 
         // ADD n: Add (immediate)
         else if (opcode[0] == 0b11000110) {
             uint8_t add_value = opcode[1];
-            return { "ADD " + std::to_string(add_value), 2 };
+            return { "ADD A, " + std::to_string(add_value), 2 };
         }
 
         // ADD SP, e: Add to stack pointer (relative)
@@ -97,7 +108,7 @@ namespace Parser {
             return { "ADD SP, " + std::to_string(add_value), 2 };
         }
 
-        print_error("Invalid ADD operation");
+        print_error("Invalid opcode passed to ADD " + TO_HEX(opcode[0]));
     }
 
     parse_instr_info AND(uint8_t opcode[]) {
@@ -117,7 +128,7 @@ namespace Parser {
             uint8_t and_value = opcode[1];
             return { "AND " + std::to_string(and_value), 2 };
         }
-        print_error("Invalid opcode passed to AND");
+        print_error("Invalid opcode passed to AND " + TO_HEX(opcode[0]));
     }
 
     parse_instr_info CALL(uint8_t opcode[]) {
@@ -140,7 +151,7 @@ namespace Parser {
             return { "CALL " + condition + " " + std::to_string(nn) , 3 };
         }
 
-        print_error("Invalid opcode passed to CALL");
+        print_error("Invalid opcode passed to CALL " + TO_HEX(opcode[0]));
     }
 
     parse_instr_info CCF(uint8_t opcode[]) {
@@ -165,7 +176,7 @@ namespace Parser {
             return { "CP " + sub_value, 1 };
         }
 
-        print_error("Invalid opcode passed to CP");
+        print_error("Invalid opcode passed to CP " + TO_HEX(opcode[0]));
     }
 
     parse_instr_info CPL(uint8_t opcode[]) {
@@ -200,7 +211,7 @@ namespace Parser {
             return { "DEC " + reg_name , 1 };
         }
 
-        print_error("Invalid opcode passed to DEC");
+        print_error("Invalid opcode passed to DEC " + TO_HEX(opcode[0]));
     }
 
     parse_instr_info DI(uint8_t opcode[]) {
@@ -240,7 +251,7 @@ namespace Parser {
             return { "INC " + reg_name, 1 };
         }
 
-        print_error("Invalid opcode passed to INC");
+        print_error("Invalid opcode passed to INC " + TO_HEX(opcode[0]));
     }
 
     parse_instr_info JP(uint8_t opcode[]) {
@@ -269,7 +280,7 @@ namespace Parser {
             std::string condition = CC(c_l, c_m);
             return { "JP " + condition + " " + std::to_string(nn) , 3 };
         }
-        print_error("Invalid opcode passed to JP");
+        print_error("Invalid opcode passed to JP " + TO_HEX(opcode[0]));
     }
 
     parse_instr_info JR(uint8_t opcode[]) {
@@ -289,7 +300,7 @@ namespace Parser {
             return { "JR " + condition + " " + std::to_string(offset) , 2 };
         }
 
-        print_error("Invalid opcode passed to JR");
+        print_error("Invalid opcode passed to JR " + TO_HEX(opcode[0]));
     }
 
     parse_instr_info LD(uint8_t opcode[]) {
@@ -356,9 +367,8 @@ namespace Parser {
             uint8_t lsb = opcode[1];
             uint8_t msb = opcode[2];
             uint16_t nn = (msb << 8) | lsb;
-            uint8_t data = fetch(nn);
-            registers.A = data;
-            return { , 3 };
+
+            return { "LD A, " + std::to_string(nn), 3 };
         }
 
         // LD (nn), A: Load from accumulator (direct)
@@ -366,44 +376,28 @@ namespace Parser {
             uint8_t lsb = opcode[1];
             uint8_t msb = opcode[2];
             uint16_t nn = (msb << 8) | lsb;
-            uint8_t data = registers.A;
 
-            bus->write(nn, data);
-
-            return { , 3 };
+            return { "LD " + std::to_string(nn) + ", A", 3 };
         }
 
         // LD A, (HL-): Load accumulator (indirect HL, decrement)
         else if (opcode[0] == 0b00111010) {
-            uint8_t data = fetch(registers.HL);
-            registers.A = data;
-            registers.HL--;
-            return { , 1 };
+            return { "LD A, [HL-]", 1 };
         }
 
         // LD (HL-), A: Load from accumulator (indirect HL, decrement)
         else if (opcode[0] == 0b00110010) {
-            uint8_t data = registers.A;
-            bus->write(registers.HL, data);
-            registers.HL--;
-            return { , 1 };
+            return { "LD [HL-], A" , 1 };
         }
 
         // LD A, (HL+): Load accumulator (indirect HL, increment)
         else if (opcode[0] == 0b00101010) {
-            uint8_t data = fetch(registers.HL);
-            registers.A = data;
-            registers.HL++;
-            return { , 1 };
+            return { "LD A, [HL+]", 1 };
         }
 
         // LD (HL+), A: Load from accumulator (indirect HL, increment)
         else if (opcode[0] == 0b00100010) {
-            uint8_t data = registers.A;
-
-            bus->write(registers.HL, data);
-            registers.HL++;
-            return { , 1 };
+            return { "LD [HL+], A", 1 };
         }
 
         // LD rr, nn: Load 16-bit register / register pair
@@ -412,8 +406,8 @@ namespace Parser {
             uint8_t lsb = opcode[1];
             uint8_t msb = opcode[2];
             uint16_t nn = (msb << 8) | lsb;
-            register_16_index_write(register_index, nn);
-            return { , 3 };
+            std::string regname = register_16_to_register_name(register_index);
+            return { "LD " + regname + ", " + std::to_string(nn) , 3 };
         }
 
         // LD (nn), SP: Load from stack pointer (direct)
@@ -421,61 +415,43 @@ namespace Parser {
             uint8_t lsb = opcode[1];
             uint8_t msb = opcode[2];
             uint16_t nn = (msb << 8) | lsb;
-            uint8_t lsb_sp = LSB(registers.SP);
-            uint8_t msb_sp = MSB(registers.SP);
 
-            bus->write(nn, lsb_sp);
-            nn++;
-
-            bus->write(nn, msb_sp);
-            return { , 3 };
+            return { "LD [" + std::to_string(nn) + "], SP", 3 };
         }
 
         // LD SP, HL: Load stack pointer from HL
         else if (opcode[0] == 0b11111001) {
-            registers.SP = registers.HL;
-            return { , 1 };
+            return { "LD SP, HL", 1 };
         }
 
         // LD HL, SP+e: Load HL from adjusted stack pointer
         else if (opcode[0] == 0b11111000) {
             uint8_t offset = opcode[1];
-            registers.HL = registers.SP + offset;
 
-            registers.flags.Z = 0;
-            registers.flags.N = 0;
-            registers.flags.H = CARRY_4(registers.HL, registers.SP);
-            registers.flags.C = CARRY_8(registers.HL, registers.SP);
-
-            return { , 2 };
+            return { "LD HL, SP + " + std::to_string(offset), 2 };
         }
 
         // I want a 20th LD please 😭  (AHAHAH ONLY 19 😹🫵)
 
-        print_error("Invalid opcode passed to LD");
+        print_error("Invalid opcode passed to LD " + TO_HEX(opcode[0]));
     }
 
     parse_instr_info LDH(uint8_t opcode[]) {
         // LDH A, (C): Load accumulator (indirect 0xFF00+C)
         if (opcode[0] == 0b11110010) {
-            uint8_t data = fetch((0xFF << 8) | registers.C);
-            registers.A = data;
-            return { , 1 };
+            return { "LDH A, [C]", 1 };
         }
 
         // LDH (C), A: Load from accumulator (indirect 0xFF00+C)
         else if (opcode[0] == 0b11100010) {
-
-            bus->write((0xFF << 8) | registers.C, registers.A);
-            return { , 1 };
+            return { "LDH [C], A", 1 };
         }
 
         // LDH A, (n): Load accumulator (direct 0xFF00+n)
         else if (opcode[0] == 0b11110000) {
             uint8_t data = opcode[1];
             uint8_t addr = (0xFF << 8) | data;
-            registers.A = fetch(addr);
-            return { , 2 };
+            return { "LDH A, [" + TO_HEX(addr) + "]", 2 };
         }
 
         // LDH (n), A: Load from accumulator (direct 0xFF00+n)
@@ -483,95 +459,61 @@ namespace Parser {
             uint8_t data = opcode[1];
             uint8_t addr = (0xFF << 8) | data;
 
-            bus->write(addr, registers.A);
-            return { , 2 };
+            return { "LDH [" + TO_HEX(addr) + "], A", 2 };
         }
 
-        print_error("Invalid opcode passed to LDH");
+        print_error("Invalid opcode passed to LDH " + TO_HEX(opcode[0]));
     }
 
     parse_instr_info NOP(uint8_t opcode[]) {
-        return { , 1 };
+        return { "NOP", 1 };
     }
 
     parse_instr_info OR(uint8_t opcode[]) {
         // OR (HL): Bitwise OR (indirect HL)
         if (opcode[0] == 0b10110110) {
-            uint8_t or_value = fetch(registers.HL);
-
-            registers.A |= or_value;
-
-            registers.flags.Z = registers.A == 0;
-            registers.flags.N = 0;
-            registers.flags.H = 0;
-            registers.flags.C = 0;
-            return { , 1 };
+            return { "OP [HL]", 1 };
         }
         // OR r: Bitwise OR (register)
         else if ((opcode[0] >> 3) == 0b10110) {
-            uint8_t or_value = register_8_index_read(opcode[0] & 0b0111);
+            std::string regname = register_8_to_register_name(opcode[0] & 0b0111);
 
-            registers.A |= or_value;
-
-            registers.flags.Z = registers.A == 0;
-            registers.flags.N = 0;
-            registers.flags.H = 0;
-            registers.flags.C = 0;
-            return { , 1 };
+            return { "OR " + regname, 1 };
         }
         // OR n: Bitwise OR (immediate)
         else if (opcode[0] == 0b11110110) {
             uint8_t or_value = opcode[1];
 
-            registers.A |= or_value;
-
-            registers.flags.Z = registers.A == 0;
-            registers.flags.N = 0;
-            registers.flags.H = 0;
-            registers.flags.C = 0;
-            return { , 2 };
+            return { "OR " + std::to_string(or_value), 2 };
         }
-        print_error("Invalid opcode passed to OR");
+        print_error("Invalid opcode passed to OR " + TO_HEX(opcode[0]));
     }
 
     parse_instr_info POP(uint8_t opcode[]) {
         uint8_t rr = ((opcode[0] & 0b00110000) >> 4);
 
-        uint8_t lsb = pop_stack(uint8_t opcode[]);
-        uint8_t msb = pop_stack(uint8_t opcode[]);
-        uint16_t data = (msb << 8) | lsb;
+        std::string regname = register_16_to_register_name(rr);
 
-        register_16_index_write(rr, data);
-
-        return { M_TO_T_CYC(3), 1 , false };
+        return { "POP " + regname, 1 };
     }
 
     parse_instr_info PREF(uint8_t opcode[]) {
-        registers.PC++;
-        opcode[0] = fetch(registers.PC);
-
-        instr_ret_info ret_info = (this->*prefix_instructions[opcode].operation)(uint8_t opcode[]);
+        parse_instr_info ret_info = (prefix_instructions[opcode[1]].operation)(opcode + 1);
 
         // The two following lines can be removed.
         // They're here to keep our convention of not modifying PC inside the instruction
         // (Unless it's an instruction that explicitly modifies PC)
-        registers.PC--;
+        // registers.PC--;
         // ret_info.cycles += 1;
 
+        ret_info.pc_incr++;
         return ret_info;
     }
 
     parse_instr_info PUSH(uint8_t opcode[]) {
         // PUSH rr: Push to stack
         uint8_t rr = ((opcode[0] & 0b00110000) >> 4);
-        uint16_t data = register_16_index_read(rr);
-
-        uint8_t msb = MSB(data);
-        uint8_t lsb = LSB(data);
-        push_stack(msb);
-        push_stack(lsb);
-
-        return { , 1 };
+        return { "PUSH " + std::to_string(rr), 1 };
     }
 
     parse_instr_info RET(uint8_t opcode[]) {
@@ -579,89 +521,39 @@ namespace Parser {
         if (opcode[0] >> 5 == 0b110) {
             bool c_m = opcode[0] & 0b00010000;
             bool c_l = opcode[0] & 0b00001000;
+            std::string condition = CC(c_l, c_m);
 
-            uint8_t lsb = pop_stack(uint8_t opcode[]);
-            uint8_t msb = pop_stack(uint8_t opcode[]);
-            uint16_t nn = (msb << 8) | lsb;
-
-            bool condition = CC(c_l, c_m);
-            if (condition) {
-                registers.PC = nn;
-                return { , 1 };
-            }
-            return { , 1 };
+            return { "RET " + condition, 1 };
         }
         // RET: Return from function
         else if (opcode[0] == 0b11001001) {
-            uint8_t lsb = pop_stack(uint8_t opcode[]);
-            uint8_t msb = pop_stack(uint8_t opcode[]);
-            uint16_t nn = (msb << 8) | lsb;
-
-            registers.PC = nn;
-
-            return { , 1 };
+            return { "RET" , 1 };
         }
-        print_error("Invalid opcode passed to RET");
+        print_error("Invalid opcode passed to RET " + TO_HEX(opcode[0]));
     }
 
     parse_instr_info RETI(uint8_t opcode[]) {
-        // RETI: Return from interrupt handler
-        uint8_t lsb = pop_stack(uint8_t opcode[]);
-        uint8_t msb = pop_stack(uint8_t opcode[]);
-        uint16_t nn = (msb << 8) | lsb;
-
-        registers.PC = nn;
-        registers.IME = true;
-
-        return { , 1 };
+        return { "RETI" , 1 };
     }
 
     parse_instr_info RLA(uint8_t opcode[]) {
         // RLA: Rotate left accumulator (0b00010111)
-        uint8_t prev_a_value = registers.A;
-        uint8_t result = (registers.A << 1) | registers.flags.C;
-        registers.A = result;
-        registers.flags.Z = 0;
-        registers.flags.N = 0;
-        registers.flags.H = 0;
-        registers.flags.C = (prev_a_value & 0b10000000) != 0;
-        return { , 1 };
+        return { "RLA", 1 };
     }
 
     parse_instr_info RLCA(uint8_t opcode[]) {
         // RLCA: Rotate left accumulator (0b00000111)
-        uint8_t prev_a_value = registers.A;
-        uint8_t result = (registers.A << 1) | (registers.A >> 7);
-        registers.A = result;
-        registers.flags.Z = 0;
-        registers.flags.N = 0;
-        registers.flags.H = 0;
-        registers.flags.C = (prev_a_value & 0b10000000) != 0;
-        return { , 1 };
+        return { "RLCA" , 1 };
     }
 
     parse_instr_info RRA(uint8_t opcode[]) {
         // RRA: Rotate right accumulator (0b00011111)
-        uint8_t prev_a_value = registers.A;
-        uint8_t result = (registers.A >> 1) | (registers.flags.C << 7);
-        registers.A = result;
-        registers.flags.Z = 0;
-        registers.flags.N = 0;
-        registers.flags.H = 0;
-        registers.flags.C = (prev_a_value & 0b00000001) != 0;
-        return { , 1 };
+        return { "RRA" , 1 };
     }
 
     parse_instr_info RRCA(uint8_t opcode[]) {
         // RRCA: Rotate right accumulator (0b00001111)
-        uint8_t prev_a_value = registers.A;
-        uint8_t result = (registers.A >> 1) | (registers.A << 7);
-        registers.A = result;
-        registers.flags.Z = 0;
-        registers.flags.N = 0;
-        registers.flags.H = 0;
-        registers.flags.C = (prev_a_value & 0b00000001) != 0;
-        return { , 1 };
+        return { "RRCA", 1 };
     }
 
     parse_instr_info RST(uint8_t opcode[]) {
@@ -670,12 +562,7 @@ namespace Parser {
         uint8_t msb = 0x00;
         uint16_t nn = (msb << 8) | lsb;
 
-        push_stack(MSB(registers.PC));
-        push_stack(LSB(registers.PC));
-
-        registers.PC = nn;
-
-        return { , 1 };
+        return { "RST " + std::to_string(nn), 1 };
     }
 
     parse_instr_info SBC(uint8_t opcode[]) {
@@ -696,7 +583,7 @@ namespace Parser {
 
             return  { "SBC " + reg_name, 1 };
         }
-        print_error("Invalid opcode passed to SBC");
+        print_error("Invalid opcode passed to SBC " + TO_HEX(opcode[0]));
     }
 
     parse_instr_info SCF(uint8_t opcode[]) {
@@ -727,7 +614,7 @@ namespace Parser {
             return { "SUB " + reg_name, 1 };
         }
 
-        print_error("Invalid opcode passed to SUB");
+        print_error("Invalid opcode passed to SUB " + TO_HEX(opcode[0]));
     }
 
     parse_instr_info XOR(uint8_t opcode[]) {
@@ -748,7 +635,7 @@ namespace Parser {
 
             return { "XOR " + reg_name, 1 };
         }
-        print_error("Invalid opcode passed to XOR");
+        print_error("Invalid opcode passed to XOR " + TO_HEX(opcode[0]));
     }
 
     parse_instr_info XXX(uint8_t opcode[]) {
@@ -773,7 +660,7 @@ namespace Parser {
             return { "BIT " + std::to_string(bit_index) + reg_name, 2 };
         }
 
-        print_error("Invalid opcode passed to BIT");
+        print_error("Invalid opcode passed to BIT " + TO_HEX(opcode[0]));
     }
 
     parse_instr_info RES(uint8_t opcode[]) {
@@ -793,7 +680,7 @@ namespace Parser {
         }
 
 
-        print_error("Invalid opcode passed to RES");
+        print_error("Invalid opcode passed to RES " + TO_HEX(opcode[0]));
     }
 
     parse_instr_info RL(uint8_t opcode[]) {
@@ -810,7 +697,7 @@ namespace Parser {
             return { "RL [HL]", 2 };
         }
 
-        print_error("Invalid opcode passed to RL");
+        print_error("Invalid opcode passed to RL " + TO_HEX(opcode[0]));
     }
 
     parse_instr_info RLC(uint8_t opcode[]) {
@@ -827,7 +714,7 @@ namespace Parser {
             return { "RLC " + reg_name, 2 };
         }
 
-        print_error("Invalid opcode passed to RLC");
+        print_error("Invalid opcode passed to RLC " + TO_HEX(opcode[0]));
     }
 
     parse_instr_info RR(uint8_t opcode[]) {
@@ -843,7 +730,7 @@ namespace Parser {
             return { "RR [HL]", 2 };
         }
 
-        print_error("Invalid opcode passed to RR");
+        print_error("Invalid opcode passed to RR " + TO_HEX(opcode[0]));
     }
 
     parse_instr_info RRC(uint8_t opcode[]) {
@@ -859,7 +746,7 @@ namespace Parser {
             return { "RRC " + reg_name , 2 };
         }
 
-        print_error("Invalid opcode passed to RRC");
+        print_error("Invalid opcode passed to RRC " + TO_HEX(opcode[0]));
     }
 
     parse_instr_info SET(uint8_t opcode[]) {
@@ -877,7 +764,7 @@ namespace Parser {
 
             return { "SET " + std::to_string(bit_index) + reg_name , 2 };
         }
-        print_error("Invalid opcode passed to SET");
+        print_error("Invalid opcode passed to SET " + TO_HEX(opcode[0]));
     }
 
     parse_instr_info SLA(uint8_t opcode[]) {
@@ -893,7 +780,7 @@ namespace Parser {
             return { "SLA " + reg_name, 2 };
         }
 
-        print_error("Invalid opcode passed to SLA");
+        print_error("Invalid opcode passed to SLA " + TO_HEX(opcode[0]));
     }
 
     parse_instr_info SRA(uint8_t opcode[]) {
@@ -908,7 +795,7 @@ namespace Parser {
 
             return { "SRA " + reg_name, 2 };
         }
-        print_error("Invalid opcode passed to SRA");
+        print_error("Invalid opcode passed to SRA " + TO_HEX(opcode[0]));
     }
     parse_instr_info SRL(uint8_t opcode[]) {
         // Shift Right Logically the byte pointed to by HL.
@@ -922,7 +809,7 @@ namespace Parser {
 
             return { "SLR " + reg_name, 2 };
         }
-        print_error("Invalid opcode passed to SRL");
+        print_error("Invalid opcode passed to SRL " + TO_HEX(opcode[0]));
     }
 
     parse_instr_info SWAP(uint8_t opcode[]) {
@@ -938,6 +825,6 @@ namespace Parser {
             return { "SWAP" + reg_name, 2 };
         }
 
-        print_error("Invalid opcode passed to SWAP");
+        print_error("Invalid opcode passed to SWAP " + TO_HEX(opcode[0]));
     }
 }

@@ -70,6 +70,13 @@ SM83::instr_ret_info SM83::ADD() {
         return { M_TO_T_CYC(2) , 1, false };
     }
 
+    // ADD (HL) r: Add(16-bit register)
+    else if (registers.IR & 0b11001111 == 0x00001001) {
+        uint8_t register_index = (registers.IR >> 4) & 0b0011;
+        // TODO
+
+    }
+
     // ADD r: Add (register)
     else if ((registers.IR >> 3) == 0b10000) {
         uint8_t reg_value = register_8_index_read(registers.IR & 0b0111);
